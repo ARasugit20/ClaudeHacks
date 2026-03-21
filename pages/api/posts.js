@@ -24,36 +24,47 @@ export default async function handler(req, res) {
       .select("*")
       .order("echo_count", { ascending: false });
 
-    if (error) return res.status(500).json({ error: error.message });
+      if (error) {
+        console.error("InsForge insert error:", JSON.stringify(error));
+        return res.status(500).json({ error: error.message });
+      }
     return res.status(200).json(data);
   }
 
   if (req.method === "POST") {
-    const { complaint, formal_request, department, official_name, official_email, issue_type, location } = req.body;
-
-    // Geocode the location to get real coordinates
-    const { lat, lng } = await geocodeLocation(location || "Tempe, Arizona");
-
-    const { data, error } = await insforge.database
-      .from("posts")
-      .insert([{
-        complaint,
-        formal_request,
-        department,
-        official_name,
-        official_email,
-        issue_type,
-        location,
-        lat,
-        lng,
-        echo_count: 1,
-        status: "pending"
-      }])
-      .select()
-      .single();
-
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data);
+    try {
+      const { complaint, formal_request, department, official_name, official_email, issue_type, location } = req.body;
+  
+      const { lat, lng } = await geocodeLocation(location || "Tempe, Arizona");
+  
+      console.log("Inserting post:", { complaint, issue_type, location, lat, lng });
+  
+      const { data, error } = await insforge.database
+        .from("posts")
+        .insert([{
+          complaint,
+          formal_request,
+          department,
+          official_name,
+          official_email,
+          issue_type,
+          location,
+          lat,
+          lng,
+          echo_count: 1,
+          status: "pending"
+        }])
+        .select()
+        .single();
+  
+      console.log("Result:", JSON.stringify({ data, error }));
+  
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json(data);
+    } catch (e) {
+      console.error("CAUGHT ERROR:", e.message, e.stack);
+      return res.status(500).json({ error: e.message });
+    }
   }
 
   return res.status(405).end();
