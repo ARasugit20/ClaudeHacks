@@ -455,7 +455,7 @@ function PostCard({ post, index, echoedIds, onEcho, onShare, onOpenModal, viewer
   const [hovered, setHovered] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.like_count || Math.floor(Math.random() * 12) + 1);
+  const [likeCount, setLikeCount] = useState(post.like_count || 0);
   const [priorityVoted, setPriorityVoted] = useState(false);
   const [priorityCount, setPriorityCount] = useState(post.priority_votes || Math.floor((post.echo_count ?? post.support ?? 0) * 0.4) || 0);
   const urgency = post.urgency_score || 0;
@@ -652,6 +652,7 @@ export default function ForumPage() {
   const [toast, setToast] = useState(null);
   const [modalPost, setModalPost] = useState(null);
   const [isOnline, setIsOnline] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   // Translation
   const [viewerLang, setViewerLang] = useState("en");
@@ -661,6 +662,7 @@ export default function ForumPage() {
   useEffect(() => {
     const saved = JSON.parse(localStorage.getItem("echoedPosts") || "[]");
     setEchoedIds(new Set(saved));
+    setMounted(true);
     fetch("/api/posts?sort=new")
       .then(r => r.json())
       .then(d => { setPosts(Array.isArray(d) ? d : []); setLoading(false); })
@@ -791,11 +793,11 @@ export default function ForumPage() {
             {/* Health score */}
             <div style={{ marginTop: 20, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 16px" }}>
               <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--muted)", marginBottom: 8 }}>Neighborhood Health</p>
-              <p style={{ fontSize: 28, fontWeight: 800, color: healthColor, letterSpacing: -1 }}>{healthScore}</p>
+              <p style={{ fontSize: 28, fontWeight: 800, color: healthColor, letterSpacing: -1 }}>{mounted ? healthScore : "—"}</p>
               <div style={{ height: 4, background: "var(--border)", borderRadius: 999, overflow: "hidden", marginTop: 6 }}>
-                <div style={{ height: "100%", width: `${healthScore}%`, background: healthColor, borderRadius: 999, transition: "width 1s" }} />
+                <div style={{ height: "100%", width: `${mounted ? healthScore : 0}%`, background: healthColor, borderRadius: 999, transition: "width 1s" }} />
               </div>
-              <p style={{ fontSize: 10, color: "var(--muted)", marginTop: 4 }}>{unresolvedCount} unresolved issues</p>
+              <p style={{ fontSize: 10, color: "var(--muted)", marginTop: 4 }}>{mounted ? unresolvedCount : "—"} unresolved issues</p>
             </div>
           </div>
         </aside>
