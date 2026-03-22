@@ -1,0 +1,13 @@
+{
+  "name": "Civilian — Civic Action",
+  "short_name": "Civilian",
+  "description": "Your neighborhood's voice, officially heard",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f1117",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

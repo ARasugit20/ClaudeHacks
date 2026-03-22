@@ -5,6 +5,16 @@ const nextConfig = {
     root: __dirname,
   },
   transpilePackages: ['react-map-gl', 'mapbox-gl'],
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

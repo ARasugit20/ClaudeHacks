@@ -1,7 +1,9 @@
 import "../styles/globals.css";
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
 import Footer from "../components/Footer";
+import OnboardingModal from "../components/OnboardingModal";
 
 export const ThemeContext = createContext({ theme: "light", toggleTheme: () => {} });
 export const useTheme = () => useContext(ThemeContext);
@@ -43,12 +45,20 @@ export default function App({ Component, pageProps }) {
 
   return (
     <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      <Head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#2563eb" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Civilian" />
+      </Head>
       <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
         <div style={{ flex: 1 }}>
           <Component {...pageProps} />
         </div>
         <Footer />
       </div>
+      <OnboardingModal />
     </ThemeContext.Provider>
   );
 }
