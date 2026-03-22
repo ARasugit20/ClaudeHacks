@@ -158,6 +158,6 @@ civic-app/
 
 ---
 
-## Built for ClaudeHacks
+## Built for HackASU
 
-Civilian was built for the ClaudeHacks hackathon. The core thesis: AI should lower the barrier for civic participation, not just automate tasks. Every resident deserves to have their voice heard by the right person, in the right format, with community backing.
+Civilian was built for HackASU. The core thesis: AI should lower the barrier for civic participation, not just automate tasks. Every resident deserves to have their voice heard by the right person, in the right format, with community backing.
