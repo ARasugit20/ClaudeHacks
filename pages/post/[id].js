@@ -3,6 +3,12 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { insforge } from "../../lib/supabase";
 
+const LANG_FLAGS = {
+  es: "🇲🇽", zh: "🇨🇳", vi: "🇻🇳", tl: "🇵🇭", ar: "🇸🇦",
+  hi: "🇮🇳", ko: "🇰🇷", pt: "🇧🇷", fr: "🇫🇷", ht: "🇭🇹",
+  so: "🇸🇴", am: "🇪🇹", ru: "🇷🇺", ja: "🇯🇵",
+};
+
 const ISSUE_COLORS = {
   traffic_safety: { label: "Traffic Safety", cls: "civic-pill-traffic", border: "#f59e0b" },
   street_lighting: { label: "Street Lighting", cls: "civic-pill-lighting", border: "#818cf8" },
@@ -25,6 +31,7 @@ export default function PostPage() {
   const [sent, setSent] = useState(false);
   const [sendError, setSendError] = useState("");
   const [animatedProgress, setAnimatedProgress] = useState(0);
+  const [showSpanish, setShowSpanish] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -132,6 +139,10 @@ export default function PostPage() {
 
   const c = ISSUE_COLORS[post.issue_type] || ISSUE_COLORS.other;
   const echoCount = post.echo_count || 0;
+  const hasSpanish = !!post.formal_request_spanish;
+  const letterText = showSpanish ? post.formal_request_spanish : post.formal_request;
+  const officialLangFlag = post.official_language ? (LANG_FLAGS[post.official_language] || "🏛️") : "🏛️";
+  const userLangFlag = post.language ? (LANG_FLAGS[post.language] || "🌐") : "🌐";
 
   return (
     <div style={{ minHeight: "100vh", background: "hsl(216,28%,7%)" }}>
@@ -141,7 +152,12 @@ export default function PostPage() {
 
         {/* Issue header */}
         <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12, borderLeft: `4px solid ${c.border}` }}>
-          <span className={`civic-pill ${c.cls}`} style={{ marginBottom: 12, display: "inline-block" }}>{c.label}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span className={`civic-pill ${c.cls}`} style={{ display: "inline-block" }}>{c.label}</span>
+            {post.language && post.language !== "en" && LANG_FLAGS[post.language] && (
+              <span style={{ fontSize: 16 }}>{LANG_FLAGS[post.language]}</span>
+            )}
+          </div>
           <p style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.5, color: "hsl(210,30%,92%)", marginBottom: 8 }}>{post.complaint}</p>
           <p style={{ fontSize: 13, color: "hsl(215,14%,58%)" }}>📍 {post.location || "Tempe, AZ"}</p>
         </div>
@@ -201,8 +217,20 @@ export default function PostPage() {
         {/* Letter */}
         {post.formal_request && (
           <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12 }}>
-            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "hsl(215,14%,58%)", marginBottom: 12 }}>📄 Formal letter (AI-generated)</p>
-            <p style={{ fontSize: 14, lineHeight: 1.7, color: "hsl(210,30%,92%)", whiteSpace: "pre-wrap" }}>{post.formal_request}</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "hsl(215,14%,58%)" }}>📄 Formal letter (AI-generated)</p>
+              {hasSpanish && (
+                <div style={{ display: "flex", gap: 4 }}>
+                  {[{ val: false, label: `${officialLangFlag} Official` }, { val: true, label: `${userLangFlag} My Language` }].map(opt => (
+                    <button key={String(opt.val)} onClick={() => setShowSpanish(opt.val)}
+                      style={{ padding: "4px 12px", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "Inter, sans-serif", border: "1px solid", transition: "all 0.15s", borderColor: showSpanish === opt.val ? "hsl(221,83%,53%)" : "hsl(215,20%,24%)", background: showSpanish === opt.val ? "rgba(37,99,235,0.15)" : "transparent", color: showSpanish === opt.val ? "hsl(221,83%,70%)" : "hsl(215,14%,58%)" }}>
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "hsl(210,30%,92%)", whiteSpace: "pre-wrap" }}>{letterText}</p>
           </div>
         )}
 

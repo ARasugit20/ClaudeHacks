@@ -29,6 +29,7 @@ const MAP_STYLES = [
   { id: "3d", label: "🏙️ 3D", style: "mapbox://styles/mapbox/light-v11", pitch: 50 },
   { id: "satellite-streets-v12", label: "🛰️ Satellite", style: "mapbox://styles/mapbox/satellite-streets-v12", pitch: 0 },
   { id: "dark-v11", label: "🌙 Dark", style: "mapbox://styles/mapbox/dark-v11", pitch: 0 },
+  { id: "heatmap", label: "🔥 Heatmap", style: "mapbox://styles/mapbox/dark-v11", pitch: 0 },
 ];
 
 // Cache geocoded coordinates so style switches don't re-geocode
@@ -218,6 +219,49 @@ export default function MapPage() {
     }
   }
 
+  function addHeatmapLayer(map, postsData) {
+    const now = Date.now();
+    const heatmapPosts = postsData.filter(p => p.status === "pending" && p.lat && p.lng);
+
+    const geojson = {
+      type: "FeatureCollection",
+      features: heatmapPosts.map(p => {
+        const daysOld = (now - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24);
+        const weight = Math.min(1, Math.max(0.05, (daysOld / 30) * ((p.echo_count || 1) / 10)));
+        return {
+          type: "Feature",
+          properties: { weight },
+          geometry: { type: "Point", coordinates: [p.lng, p.lat] },
+        };
+      }),
+    };
+
+    if (map.getSource("heatmap-data")) {
+      if (map.getLayer("heatmap-layer")) map.removeLayer("heatmap-layer");
+      map.removeSource("heatmap-data");
+    }
+
+    map.addSource("heatmap-data", { type: "geojson", data: geojson });
+    map.addLayer({
+      id: "heatmap-layer",
+      type: "heatmap",
+      source: "heatmap-data",
+      paint: {
+        "heatmap-weight": ["get", "weight"],
+        "heatmap-intensity": 1.5,
+        "heatmap-radius": 40,
+        "heatmap-color": [
+          "interpolate", ["linear"], ["heatmap-density"],
+          0, "rgba(0,0,0,0)",
+          0.2, "#22c55e",
+          0.5, "#f59e0b",
+          1, "#ef4444",
+        ],
+        "heatmap-opacity": 0.85,
+      },
+    });
+  }
+
   function switchStyle(styleObj) {
     setActiveStyle(styleObj.id);
     const map = mapInstanceRef.current;
@@ -227,7 +271,11 @@ export default function MapPage() {
       map.setStyle(styleObj.style);
       map.once("style.load", async () => {
         add3DBuildings(map);
-        await addMarkers(map, window.mapboxgl, posts, process.env.NEXT_PUBLIC_MAPBOX_TOKEN, router);
+        if (styleObj.id === "heatmap") {
+          addHeatmapLayer(map, posts);
+        } else {
+          await addMarkers(map, window.mapboxgl, posts, process.env.NEXT_PUBLIC_MAPBOX_TOKEN, router);
+        }
       });
     }
   }
@@ -284,7 +332,22 @@ export default function MapPage() {
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       ) : (
-        <div ref={mapRef} style={{ height: "calc(100vh - 112px)", width: "100%" }} />
+        <div style={{ position: "relative" }}>
+          <div ref={mapRef} style={{ height: "calc(100vh - 112px)", width: "100%" }} />
+          {activeStyle === "heatmap" && (
+            <div style={{
+              position: "absolute", bottom: 40, left: 16,
+              background: "rgba(10,14,20,0.85)", borderRadius: 10,
+              padding: "10px 14px", fontSize: 12, color: "white",
+              fontFamily: "Inter, sans-serif", border: "1px solid rgba(255,255,255,0.12)",
+              backdropFilter: "blur(4px)", pointerEvents: "none",
+            }}>
+              <div style={{ fontWeight: 700, marginBottom: 5, fontSize: 10, textTransform: "uppercase", letterSpacing: 0.5, color: "hsl(215,14%,65%)" }}>Heatmap Legend</div>
+              <div style={{ marginBottom: 4 }}>🟢 Few → 🟡 Moderate → 🔴 Neglected</div>
+              <div style={{ color: "hsl(215,14%,55%)", fontSize: 11 }}>Darker = more unresolved + longer wait</div>
+            </div>
+          )}
+        </div>
       )}
     </>
   );
