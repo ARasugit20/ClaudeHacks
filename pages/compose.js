@@ -289,6 +289,9 @@ export default function Compose() {
   const [imageMediaType, setImageMediaType] = useState("");
   const [moderationMsg, setModerationMsg] = useState("");
   const [moderating, setModerating] = useState(false);
+  const [complaintError, setComplaintError] = useState("");
+  const [locationError, setLocationError] = useState("");
+  const [moderationError, setModerationError] = useState("");
   const [similarPosts, setSimilarPosts] = useState([]);
   const [showSimilar, setShowSimilar] = useState(false);
   const [language, setLanguage] = useState("en");
@@ -361,39 +364,49 @@ export default function Compose() {
   }
 
   async function handleSubmit() {
-    // Step 1 — validate complaint text first
-    if (!complaint.trim()) { setComplaintTouched(true); return; }
-
-    setLoading(true);
+    // Clear all previous errors
+    setComplaintError("");
+    setLocationError("");
+    setModerationError("");
     setError("");
     setModerationMsg("");
 
-    // Step 2 — moderation gate. Runs BEFORE location check, BEFORE analyze, BEFORE save.
-    // setStep stays "form" until moderation passes.
+    // PART 1 — Client-side validation (instant, no API call)
+    let hasError = false;
+    if (complaint.trim().length < 20) {
+      setComplaintError("Please describe your issue in more detail (at least 20 characters).");
+      hasError = true;
+    }
+    if (location.trim() === "") {
+      setLocationError("Location is required so we can route your complaint to the right official.");
+      hasError = true;
+    }
+    if (hasError) return; // HARD STOP — no API calls
+
+    // Show loading only after validation passes
+    setLoading(true);
+
+    // PART 2 — AI moderation gate (must pass before analyze)
     try {
       const modRes = await fetch("/api/moderate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: complaint, language }),
+        body: JSON.stringify({ complaint }),
       });
       const modData = await modRes.json();
-      if (!modData.ok) {
-        setModerationMsg(modData.message || "Your complaint contains language that violates our community guidelines. Please describe your issue respectfully and we'll help you raise it.");
+      if (!modData.allowed) {
         setLoading(false);
-        return; // HARD STOP — nothing below runs
+        setModerationError(
+          (modData.reason || "Your complaint contains language that violates our community guidelines.") +
+          " Please rewrite your complaint respectfully."
+        );
+        return; // HARD STOP — analyze.js never called
       }
     } catch {
       // Moderation API unreachable — fail open, continue
     }
 
-    // Step 3 — validate location (only after complaint passes moderation)
-    if (!location.trim()) {
-      setLocationTouched(true);
-      setLoading(false);
-      return;
-    }
-
-    // Step 4 — all checks passed, proceed to analyze
+    // PART 3 — All checks passed, proceed to analyze
     setStep("analyzing");
     try {
       const analyzeRes = await fetch("/api/analyze", {
@@ -543,11 +556,14 @@ export default function Compose() {
               rows={4}
               placeholder="e.g. There's a broken streetlight on Rural Road near the library and it's been out for 3 weeks. It's dangerous at night..."
               value={complaint}
-              onChange={(e) => { setComplaint(e.target.value); if (moderationMsg) setModerationMsg(""); if (showSimilar) setShowSimilar(false); if (complaintTouched) setComplaintTouched(false); }}
+              onChange={(e) => { setComplaint(e.target.value); if (moderationMsg) setModerationMsg(""); if (moderationError) setModerationError(""); if (complaintError) setComplaintError(""); if (showSimilar) setShowSimilar(false); if (complaintTouched) setComplaintTouched(false); }}
               onBlur={(e) => { checkModeration(e.target.value); checkSimilar(e.target.value, location); }}
-              style={moderationMsg || (complaintTouched && !complaint.trim()) ? { borderColor: "#ef4444" } : {}}
+              style={moderationMsg || complaintError || (complaintTouched && !complaint.trim()) ? { borderColor: "#ef4444" } : {}}
             />
-            {complaintTouched && !complaint.trim() && (
+            {complaintError && (
+              <p style={{ color: "#ef4444", fontSize: 12, marginTop: 4 }}>{complaintError}</p>
+            )}
+            {!complaintError && complaintTouched && !complaint.trim() && (
               <p style={{ fontSize: 12, color: "#ef4444", marginTop: 4 }}>Please describe the problem.</p>
             )}
 
@@ -620,15 +636,24 @@ export default function Compose() {
               type="text"
               placeholder="e.g. Rural Road & Southern Ave, Tempe"
               value={location}
-              onChange={(e) => { setLocation(e.target.value); if (error) setError(""); if (locationTouched) setLocationTouched(false); }}
+              onChange={(e) => { setLocation(e.target.value); if (error) setError(""); if (locationError) setLocationError(""); if (locationTouched) setLocationTouched(false); }}
               onBlur={() => { setLocationTouched(true); checkSimilar(complaint, location); }}
-              style={locationTouched && !location.trim() ? { borderColor: "#ef4444" } : {}}
+              style={locationError || (locationTouched && !location.trim()) ? { borderColor: "#ef4444" } : {}}
             />
-            {locationTouched && !location.trim() && (
+            {locationError && (
+              <p style={{ color: "#ef4444", fontSize: 12, marginTop: 4 }}>{locationError}</p>
+            )}
+            {!locationError && locationTouched && !location.trim() && (
               <p style={{ fontSize: 12, color: "#ef4444", marginTop: 4 }}>Location is required to find the right official.</p>
             )}
           </div>
 
+          {moderationError && (
+            <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, padding: "12px", marginBottom: 12, fontSize: 13, color: "#991b1b" }}>
+              {moderationError}{" "}
+              <a href="/policy" style={{ color: "#991b1b", fontWeight: 700 }}>Read our policy</a>
+            </div>
+          )}
           <button className="submit-btn" onClick={handleSubmit} disabled={loading || moderating}>
             {loading ? "Checking..." : "Find My Voice →"}
           </button>

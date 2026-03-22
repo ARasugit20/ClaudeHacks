@@ -2,61 +2,47 @@ import Anthropic from "@anthropic-ai/sdk";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Fast regex pre-check for obvious violations
-const HARD_BLOCK = [
-  /\b(kill|murder|shoot|stab|bomb|attack|assault|rape|lynch)\b/i,
-  /\b(nigger|faggot|chink|spic|kike|wetback)\b/i,
-  /\b(go\s+die|kys|kill\s+yourself)\b/i,
-  /\b(child\s+porn|csam|pedophil)\b/i,
-];
-
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
-  const { text, language } = req.body;
-  if (!text?.trim() || text.trim().length < 10) return res.status(200).json({ ok: true });
-
-  // Hard block first (fast, no API call)
-  for (const p of HARD_BLOCK) {
-    if (p.test(text)) {
-      return res.status(200).json({
-        ok: false,
-        message: "This content violates our community guidelines. Civilian does not allow violent, hateful, or abusive language.",
-      });
-    }
+  const { complaint } = req.body;
+  if (!complaint?.trim() || complaint.trim().length < 10) {
+    return res.status(200).json({ allowed: true, reason: "Too short to evaluate" });
   }
 
-  // Claude context-aware check for borderline content
   try {
-    const langNote = language && language !== "en"
-      ? `\n\nIMPORTANT: This text may be in a non-English language or written by a non-native speaker. Evaluate it in its original language. Do not penalize informal, non-native, or grammatically imperfect phrasing. Judge only the intent and content, not the writing quality.`
-      : "";
-
-    const msg = await client.messages.create({
+    const result = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 100,
       messages: [{
         role: "user",
-        content: `You are a content moderator for a civic platform where residents report local government issues (potholes, broken lights, parks, etc.).
+        content: `You are a content moderator for a civic complaints platform where residents report local issues like potholes, broken lights, unsafe roads, and neighborhood problems.
 
-Review this text and respond with ONLY a JSON object:
-{"ok": true} if the content is a legitimate civic complaint (even if frustrated or strongly worded)
-{"ok": false, "message": "brief reason"} if it contains: hate speech, threats, personal attacks on private individuals, sexual content, spam, or is completely unrelated to civic issues.
+Analyze this text and respond with ONLY a JSON object: {"allowed": true/false, "reason": "one sentence explanation"}
 
-Be lenient — frustrated residents venting about city problems is fine. Only flag genuinely harmful or irrelevant content.${langNote}
+Mark as NOT allowed (allowed: false) ONLY if the text:
+- Contains hate speech, slurs, or racial abuse
+- Contains personal threats or harassment toward specific people
+- Is completely unrelated to civic/community issues (spam, gibberish)
+- Contains sexual content
 
-Text to review: "${text.slice(0, 500)}"`,
+Mark as ALLOWED (allowed: true) even if:
+- The person is frustrated or uses mild profanity about the situation ("this road is absolute garbage")
+- The writing is informal or in broken English
+- The complaint criticizes government officials or policies
+- The text is written in any language
+
+Text to analyze: "${complaint.slice(0, 500)}"`,
       }],
     });
 
-    const raw = msg.content[0]?.text?.trim() || '{"ok":true}';
+    const text = result.content[0].text.replace(/```json|```/g, "").trim();
     try {
-      const result = JSON.parse(raw);
-      return res.status(200).json(result);
+      const data = JSON.parse(text);
+      return res.status(200).json({ allowed: !!data.allowed, reason: data.reason || "" });
     } catch {
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ allowed: true, reason: "Parse error — defaulting to allowed" });
     }
   } catch {
-    // On API error, allow through (fail open)
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ allowed: true, reason: "API error — defaulting to allowed" });
   }
 }
