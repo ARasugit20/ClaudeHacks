@@ -361,12 +361,15 @@ export default function Compose() {
   }
 
   async function handleSubmit() {
+    // Step 1 — validate complaint text first
     if (!complaint.trim()) { setComplaintTouched(true); return; }
-    if (!location.trim()) { setLocationTouched(true); return; }
+
     setLoading(true);
     setError("");
+    setModerationMsg("");
 
-    // Hard moderation gate — must pass before anything else runs
+    // Step 2 — moderation gate. Runs BEFORE location check, BEFORE analyze, BEFORE save.
+    // setStep stays "form" until moderation passes.
     try {
       const modRes = await fetch("/api/moderate", {
         method: "POST",
@@ -377,12 +380,20 @@ export default function Compose() {
       if (!modData.ok) {
         setModerationMsg(modData.message || "Your complaint contains language that violates our community guidelines. Please describe your issue respectfully and we'll help you raise it.");
         setLoading(false);
-        return; // hard stop — never reaches analyze or save
+        return; // HARD STOP — nothing below runs
       }
     } catch {
-      // On moderation API error, fail open and continue
+      // Moderation API unreachable — fail open, continue
     }
 
+    // Step 3 — validate location (only after complaint passes moderation)
+    if (!location.trim()) {
+      setLocationTouched(true);
+      setLoading(false);
+      return;
+    }
+
+    // Step 4 — all checks passed, proceed to analyze
     setStep("analyzing");
     try {
       const analyzeRes = await fetch("/api/analyze", {
@@ -618,8 +629,9 @@ export default function Compose() {
             )}
           </div>
 
-          <button className="submit-btn" onClick={handleSubmit} disabled={loading || !!moderationMsg || moderating}>
-            {loading ? "Analyzing..." : "Find My Voice →"}
+          <button className="submit-btn" onClick={handleSubmit} disabled={loading || moderating}>
+            {loading ? "Checking..." : "Find My Voice →"}
+          </button>
           </button>
 
           {/* Privacy shield card — SVG icons */}
