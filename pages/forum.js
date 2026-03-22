@@ -790,17 +790,15 @@ export default function ForumPage() {
             <div style={{ marginTop: 24 }}>
               <Link href="/compose" className="nav-btn" style={{ width: "100%", justifyContent: "center", fontSize: 13 }}>+ Raise Issue</Link>
             </div>
-            {/* Health score — client only to avoid hydration mismatch */}
-            {mounted && (
+            {/* Health score */}
             <div style={{ marginTop: 20, background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 16px" }}>
               <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "var(--muted)", marginBottom: 8 }}>Neighborhood Health</p>
-              <p style={{ fontSize: 28, fontWeight: 800, color: healthColor, letterSpacing: -1 }}>{healthScore}</p>
+              <p suppressHydrationWarning style={{ fontSize: 28, fontWeight: 800, color: healthColor, letterSpacing: -1 }}>{mounted ? healthScore : ""}</p>
               <div style={{ height: 4, background: "var(--border)", borderRadius: 999, overflow: "hidden", marginTop: 6 }}>
-                <div style={{ height: "100%", width: `${healthScore}%`, background: healthColor, borderRadius: 999, transition: "width 1s" }} />
+                <div suppressHydrationWarning style={{ height: "100%", width: `${mounted ? healthScore : 0}%`, background: healthColor, borderRadius: 999, transition: "width 1s" }} />
               </div>
-              <p style={{ fontSize: 10, color: "var(--muted)", marginTop: 4 }}>{unresolvedCount} unresolved issues</p>
+              <p suppressHydrationWarning style={{ fontSize: 10, color: "var(--muted)", marginTop: 4 }}>{mounted ? `${unresolvedCount} unresolved issues` : ""}</p>
             </div>
-            )}
           </div>
         </aside>
 
