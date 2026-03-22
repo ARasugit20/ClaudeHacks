@@ -72,8 +72,8 @@ export default function SearchPage() {
     (p.issue_type || "").toLowerCase().includes(q);
 
   const dbIds = new Set(dbPosts.map(p => String(p.id)));
-  const baseMatches = q.length >= 2 ? BASE_POSTS.filter(p => !dbIds.has(String(p.id)) && matchesQuery(p)) : [];
-  const merged = q.length < 2 ? [] : [...dbPosts, ...baseMatches];
+  const baseMatches = BASE_POSTS.filter(p => !dbIds.has(String(p.id)) && (q.length < 2 || matchesQuery(p)));
+  const merged = [...dbPosts, ...baseMatches];
 
   return (
     <>
@@ -100,19 +100,12 @@ export default function SearchPage() {
         {/* Tab bar */}
         <div style={{ display: "flex", gap: 4, marginBottom: 20, borderBottom: "1px solid var(--border)" }}>
           <div style={{ padding: "8px 16px", fontSize: 13, fontWeight: 600, color: "#2563eb", borderBottom: "2px solid #2563eb", marginBottom: -1 }}>
-            Issues {q.length >= 2 ? `(${merged.length})` : ""}
+            Issues {`(${merged.length})`}
           </div>
         </div>
 
         {/* Results */}
-        {q.length < 2 ? (
-          <div style={{ textAlign: "center", padding: "48px 0" }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.5" style={{ marginBottom: 12 }}>
-              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-            </svg>
-            <p style={{ fontSize: 15, color: "var(--muted)" }}>Type at least 2 characters to search</p>
-          </div>
-        ) : merged.length === 0 ? (
+        {merged.length === 0 ? (
           <div style={{ textAlign: "center", padding: "48px 0" }}>
             <p style={{ fontSize: 15, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>No results for &ldquo;{query}&rdquo;</p>
             <p style={{ fontSize: 13, color: "var(--muted)" }}>Try a different term or <Link href="/compose" style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}>raise this issue</Link>.</p>
