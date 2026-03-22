@@ -737,10 +737,11 @@ export default function ForumPage() {
     setToast({ message: "Voice added!", type: "success" });
   }
 
-  const allPosts = [
-    ...FORUM_THREADS.map(t => ({ ...t, issue_type: t.issueType, complaint: t.text, echo_count: t.support })),
-    ...posts,
-  ];
+  const staticPosts = FORUM_THREADS.map(t => ({ ...t, issue_type: t.issueType, complaint: t.text, echo_count: t.support }));
+  // Pin posts with a language field (non-English demo posts) to the front
+  const pinnedStatic = staticPosts.filter(p => p.language && p.language !== "en");
+  const restStatic = staticPosts.filter(p => !p.language || p.language === "en");
+  const allPosts = [...pinnedStatic, ...posts, ...restStatic];
 
   const filtered = allPosts
     .filter(p => {
