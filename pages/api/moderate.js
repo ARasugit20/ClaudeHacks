@@ -12,7 +12,7 @@ const HARD_BLOCK = [
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
-  const { text } = req.body;
+  const { text, language } = req.body;
   if (!text?.trim() || text.trim().length < 10) return res.status(200).json({ ok: true });
 
   // Hard block first (fast, no API call)
@@ -27,6 +27,10 @@ export default async function handler(req, res) {
 
   // Claude context-aware check for borderline content
   try {
+    const langNote = language && language !== "en"
+      ? `\n\nIMPORTANT: This text may be in a non-English language or written by a non-native speaker. Evaluate it in its original language. Do not penalize informal, non-native, or grammatically imperfect phrasing. Judge only the intent and content, not the writing quality.`
+      : "";
+
     const msg = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 100,
@@ -38,7 +42,7 @@ Review this text and respond with ONLY a JSON object:
 {"ok": true} if the content is a legitimate civic complaint (even if frustrated or strongly worded)
 {"ok": false, "message": "brief reason"} if it contains: hate speech, threats, personal attacks on private individuals, sexual content, spam, or is completely unrelated to civic issues.
 
-Be lenient — frustrated residents venting about city problems is fine. Only flag genuinely harmful or irrelevant content.
+Be lenient — frustrated residents venting about city problems is fine. Only flag genuinely harmful or irrelevant content.${langNote}
 
 Text to review: "${text.slice(0, 500)}"`,
       }],

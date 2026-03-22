@@ -47,7 +47,7 @@ CRITICAL: Your final response must be ONLY the JSON object. No markdown, no expl
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
-  const { complaint, location, imageBase64, imageMediaType, language } = req.body;
+  const { complaint, location, imageBase64, imageMediaType, language, highSensitivity } = req.body;
   if (!complaint?.trim()) return res.status(400).json({ error: "No complaint" });
 
   // Content policy check
@@ -78,7 +78,9 @@ export default async function handler(req, res) {
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 3000,
-      system: SYSTEM_PROMPT,
+      system: highSensitivity
+        ? `PRIVACY MODE: Before processing, strip any personally identifying details (names, phone numbers, addresses, emails, ID numbers) from the complaint. Do not include them in any output field.\n\n${SYSTEM_PROMPT}`
+        : SYSTEM_PROMPT,
       tools: [
         {
           type: "web_search_20250305",

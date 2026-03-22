@@ -546,6 +546,18 @@ function PostCard({ post, index, echoedIds, onEcho, onShare, onOpenModal, viewer
         </div>
 
         <span className="post-type" style={{ background: `${c.border}22`, color: c.border }}>{c.label}</span>
+        {/* Moderation fairness badge — shown when post is in a non-English language */}
+        {(() => {
+          const rawText = post.complaint || post.text || "";
+          const detected = detectLang(rawText);
+          const postLang = detected || (post.language && post.language !== "en" ? post.language : null);
+          if (!postLang || postLang === "en") return null;
+          return (
+            <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 999, background: "rgba(34,197,94,0.1)", color: "#16a34a", border: "1px solid rgba(34,197,94,0.3)", marginLeft: 6 }}>
+              ✓ Reviewed in {LANG_NAMES[postLang] || postLang}
+            </span>
+          );
+        })()}
 
         <p style={{ fontSize: 14, fontWeight: 500, lineHeight: 1.6, color: "var(--text)", margin: "10px 0 14px" }}>
           {post.complaint || post.text}

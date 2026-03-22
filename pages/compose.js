@@ -294,6 +294,7 @@ export default function Compose() {
   const [language, setLanguage] = useState("en");
   const [detectedLang, setDetectedLang] = useState(null);
   const [showLangBanner, setShowLangBanner] = useState(false);
+  const [highSensitivity, setHighSensitivity] = useState(false);
 
   // Detect browser language and pre-select it
   useEffect(() => {
@@ -333,7 +334,7 @@ export default function Compose() {
       const res = await fetch("/api/moderate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, language }),
       });
       const data = await res.json();
       setModerationMsg(data.ok ? "" : (data.message || "This content may violate our community guidelines."));
@@ -369,7 +370,7 @@ export default function Compose() {
       const analyzeRes = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ complaint, location, imageBase64: imageBase64 || undefined, imageMediaType: imageMediaType || undefined, language }),
+        body: JSON.stringify({ complaint, location, imageBase64: imageBase64 || undefined, imageMediaType: imageMediaType || undefined, language, highSensitivity }),
       });
       if (!analyzeRes.ok) {
         const errData = await analyzeRes.json().catch(() => ({}));
@@ -593,7 +594,7 @@ export default function Compose() {
           <div style={{ marginTop: 16, background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 16px" }}>
             {[
               [<svg key="lock" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>, "Anonymous by default — no name, email, or account required"],
-              [<svg key="shield" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, "No personal data stored — only your complaint text and location"],
+              [<svg key="shield" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>, "No IP addresses logged — your identity is never stored"],
               [<svg key="eye" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>, "AI drafts the letter — you review before anything is sent"],
               [<svg key="check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>, "You decide if and when to send — we never auto-send"],
             ].map(([icon, text], i) => (
@@ -602,6 +603,30 @@ export default function Compose() {
                 <span style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.5 }}>{text}</span>
               </div>
             ))}
+
+            {/* High sensitivity toggle */}
+            <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={highSensitivity ? "#2563eb" : "var(--muted)"} strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                <div>
+                  <p style={{ fontSize: 12, fontWeight: 600, color: highSensitivity ? "#2563eb" : "var(--text)", lineHeight: 1.3 }}>High sensitivity mode</p>
+                  <p style={{ fontSize: 11, color: "var(--muted)", lineHeight: 1.4, marginTop: 2 }}>Strips identifying details before AI processing</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={highSensitivity}
+                onClick={() => setHighSensitivity(v => !v)}
+                style={{ flexShrink: 0, width: 36, height: 20, borderRadius: 10, border: "none", background: highSensitivity ? "#2563eb" : "var(--border)", cursor: "pointer", position: "relative", transition: "background 0.2s" }}>
+                <span style={{ position: "absolute", top: 2, left: highSensitivity ? 18 : 2, width: 16, height: 16, borderRadius: "50%", background: "white", transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)" }} />
+              </button>
+            </div>
+            {highSensitivity && (
+              <div style={{ marginTop: 8, padding: "8px 10px", borderRadius: 8, background: "rgba(37,99,235,0.07)", border: "1px solid rgba(37,99,235,0.2)", fontSize: 11, color: "#2563eb", lineHeight: 1.5 }}>
+                Extra privacy protections active — personal details will be removed before processing
+              </div>
+            )}
           </div>
         </div>
 
