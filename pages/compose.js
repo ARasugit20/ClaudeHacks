@@ -364,8 +364,26 @@ export default function Compose() {
     if (!complaint.trim()) { setComplaintTouched(true); return; }
     if (!location.trim()) { setLocationTouched(true); return; }
     setLoading(true);
-    setStep("analyzing");
     setError("");
+
+    // Hard moderation gate — must pass before anything else runs
+    try {
+      const modRes = await fetch("/api/moderate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: complaint, language }),
+      });
+      const modData = await modRes.json();
+      if (!modData.ok) {
+        setModerationMsg(modData.message || "Your complaint contains language that violates our community guidelines. Please describe your issue respectfully and we'll help you raise it.");
+        setLoading(false);
+        return; // hard stop — never reaches analyze or save
+      }
+    } catch {
+      // On moderation API error, fail open and continue
+    }
+
+    setStep("analyzing");
     try {
       const analyzeRes = await fetch("/api/analyze", {
         method: "POST",
@@ -479,6 +497,20 @@ export default function Compose() {
           {error && (
             <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 10, padding: "12px 14px", marginBottom: 16, fontSize: 14, color: "#ef4444" }}>
               {error}
+            </div>
+          )}
+
+          {/* Moderation hard-stop banner — shown when submit is blocked */}
+          {moderationMsg && (
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10, background: "rgba(239,68,68,0.08)", border: "1.5px solid rgba(239,68,68,0.4)", borderRadius: 12, padding: "14px 16px", marginBottom: 16 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: 1 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: "#ef4444", marginBottom: 3 }}>Content policy violation</p>
+                <p style={{ fontSize: 13, color: "#ef4444", opacity: 0.9, lineHeight: 1.5 }}>
+                  Your complaint contains language that violates our community guidelines. Please describe your issue respectfully and we&apos;ll help you raise it.{" "}
+                  <a href="/policy" style={{ color: "#ef4444", fontWeight: 700 }}>Read our policy</a>
+                </p>
+              </div>
             </div>
           )}
 
