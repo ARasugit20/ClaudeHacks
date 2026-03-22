@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import Nav from "../components/Nav";
@@ -642,7 +643,7 @@ function PostCard({ post, index, echoedIds, onEcho, onShare, onOpenModal, viewer
 }
 
 // ── Forum Page ───────────────────────────────────────────────────────────────
-export default function ForumPage() {
+function ForumPage() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState("all");
@@ -876,3 +877,5 @@ export default function ForumPage() {
     </div>
   );
 }
+
+export default dynamic(() => Promise.resolve(ForumPage), { ssr: false });
