@@ -330,23 +330,8 @@ export default function Compose() {
     } catch { setSimilarPosts([]); setShowSimilar(false); }
   }
 
-  async function checkModeration(text) {
-    if (!text.trim() || text.trim().length < 20) { setModerationMsg(""); return; }
-    setModerating(true);
-    try {
-      const res = await fetch("/api/moderate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text, language }),
-      });
-      const data = await res.json();
-      setModerationMsg(data.ok ? "" : (data.message || "This content may violate our community guidelines."));
-    } catch {
-      setModerationMsg("");
-    } finally {
-      setModerating(false);
-    }
-  }
+  // Inline moderation removed — moderation runs once at submit time only.
+  // This prevents false positives from partial text triggering the banner mid-typing.
 
   function handlePhotoChange(e) {
     const file = e.target.files?.[0];
@@ -557,7 +542,7 @@ export default function Compose() {
               placeholder="e.g. There's a broken streetlight on Rural Road near the library and it's been out for 3 weeks. It's dangerous at night..."
               value={complaint}
               onChange={(e) => { setComplaint(e.target.value); if (moderationMsg) setModerationMsg(""); if (moderationError) setModerationError(""); if (complaintError) setComplaintError(""); if (showSimilar) setShowSimilar(false); if (complaintTouched) setComplaintTouched(false); }}
-              onBlur={(e) => { checkModeration(e.target.value); checkSimilar(e.target.value, location); }}
+              onBlur={(e) => { checkSimilar(e.target.value, location); }}
               style={moderationMsg || complaintError || (complaintTouched && !complaint.trim()) ? { borderColor: "#ef4444" } : {}}
             />
             {complaintError && (
