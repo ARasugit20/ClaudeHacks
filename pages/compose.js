@@ -973,7 +973,11 @@ function ResultPage({ result, router }) {
 
             {/* Button 3 — tertiary: See who else */}
             <button
-              onClick={() => router.push(`/post/${result.id}`)}
+              onClick={() => {
+                const rid = result.id;
+                if (!rid || String(rid).startsWith('local-')) router.push('/forum');
+                else router.push(`/post/${rid}`);
+              }}
               style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, width: "100%", padding: "11px", borderRadius: 12, border: "none", background: "transparent", color: "var(--muted)", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
               onMouseEnter={e => e.currentTarget.style.color = "var(--text)"}
               onMouseLeave={e => e.currentTarget.style.color = "var(--muted)"}

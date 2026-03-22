@@ -5,6 +5,7 @@ import Nav from "../../components/Nav";
 import Toast from "../../components/Toast";
 import EchoConsentDialog from "../../components/EchoConsentDialog";
 import PostSidebar from "../../components/PostSidebar";
+import { FORUM_THREADS } from "../../lib/civicData";
 
 const TYPE_LABELS = {
   traffic_safety:   { label: "Traffic Safety",   cls: "type-traffic"  },
@@ -195,9 +196,28 @@ export default function PostPage() {
     fetch(`/api/posts?id=${id}`)
       .then(r => r.ok ? r.json() : null)
       .then(data => {
-        setPost(data);
+        let resolved = data;
+        // Fallback: check static FORUM_THREADS if DB returned nothing
+        if (!resolved) {
+          const staticMatch = FORUM_THREADS.find(t => String(t.id) === String(id));
+          if (staticMatch) {
+            resolved = {
+              ...staticMatch,
+              complaint: staticMatch.text || staticMatch.complaint,
+              issue_type: staticMatch.issueType || staticMatch.issue_type,
+              echo_count: staticMatch.support || staticMatch.echo_count || 0,
+              formal_request: staticMatch.formal_request || `Dear ${staticMatch.department || "City of Tempe"},\n\nWe the undersigned residents formally request immediate attention to the following community concern:\n\n${staticMatch.text || staticMatch.complaint}\n\nThis issue has been raised by ${staticMatch.support || 1} residents.\n\nSincerely,\nConcerned Tempe Residents`,
+              official_name: staticMatch.official_name || "City of Tempe 311 Service",
+              department: staticMatch.department || "Tempe City Services",
+              official_email: staticMatch.official_email || "311@tempe.gov",
+              location: staticMatch.location || "Tempe, AZ",
+              status: staticMatch.status || "pending",
+            };
+          }
+        }
+        setPost(resolved);
         setLoading(false);
-        if (data) setLikeCount(data.like_count || Math.floor(Math.random() * 20) + 3);
+        if (resolved) setLikeCount(resolved.like_count || 0);
       })
       .catch(() => setLoading(false));
     const savedLikes = JSON.parse(localStorage.getItem("likedPosts") || "[]");
@@ -293,7 +313,26 @@ export default function PostPage() {
   }
 
   if (loading) return <><Nav /><div className="container"><div className="loading-wrap"><div className="loading-spinner" /></div></div></>;
-  if (!post) return <><Nav /><div className="container"><p style={{ color: "var(--muted)" }}>Post not found.</p><Link href="/forum" className="back-link">Back to feed</Link></div></>;
+  if (!post) return (
+    <>
+      <Nav />
+      <div style={{ maxWidth: 680, margin: "0 auto", padding: "48px 16px", textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+        <p style={{ fontSize: 18, fontWeight: 600, color: "var(--text)", marginBottom: 8 }}>Issue not found</p>
+        <p style={{ fontSize: 14, color: "var(--muted)", marginBottom: 24, lineHeight: 1.6 }}>
+          This issue may have been submitted locally. Here are some active community issues:
+        </p>
+        {FORUM_THREADS.slice(0, 3).map(t => (
+          <Link href={`/post/${t.id}`} key={t.id} style={{ display: "block", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 12, padding: "14px 16px", marginBottom: 10, textDecoration: "none", textAlign: "left" }}>
+            <p style={{ fontSize: 12, color: "var(--muted)", marginBottom: 4, textTransform: "uppercase" }}>{(t.issueType || "").replace(/_/g, " ")}</p>
+            <p style={{ fontSize: 14, color: "var(--text)", lineHeight: 1.5 }}>{(t.text || t.complaint || "").slice(0, 100)}...</p>
+            <p style={{ fontSize: 12, color: "#2563eb", marginTop: 6 }}>👥 {t.support || 0} voices</p>
+          </Link>
+        ))}
+        <Link href="/forum" style={{ display: "inline-block", marginTop: 12, fontSize: 14, color: "#2563eb", textDecoration: "none" }}>← Back to community feed</Link>
+      </div>
+    </>
+  );
 
   const typeInfo = TYPE_LABELS[post.issue_type] || TYPE_LABELS.other;
   const progress = Math.min((post.echo_count / 50) * 100, 100);
