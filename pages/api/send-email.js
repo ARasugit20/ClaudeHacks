@@ -15,9 +15,9 @@ export default async function handler(req, res) {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "CivicPulse <onboarding@resend.dev>",
+      from: "Civilian <onboarding@resend.dev>",
       to: ["sgupt354@asu.edu"],
-      reply_to: "noreply@civicpulse.app",
+      reply_to: "noreply@civilian.app",
       subject,
       html: `
         <!DOCTYPE html>
@@ -31,7 +31,7 @@ export default async function handler(req, res) {
             
             <!-- Header -->
             <div style="background:#2563eb;padding:24px 32px;">
-              <p style="margin:0;color:rgba(255,255,255,0.8);font-size:13px;letter-spacing:0.5px;text-transform:uppercase;">CivicPulse Community Platform</p>
+              <p style="margin:0;color:rgba(255,255,255,0.8);font-size:13px;letter-spacing:0.5px;text-transform:uppercase;">Civilian Community Platform</p>
               <h1 style="margin:6px 0 0;color:white;font-size:22px;font-weight:600;">Formal Community Request</h1>
             </div>
 
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
             <!-- Letter body -->
             <div style="padding:32px;">
               <p style="margin:0 0 24px;font-size:14px;color:#666;line-height:1.6;">
-                The following formal request was submitted by community members via CivicPulse, 
+                The following formal request was submitted by community members via Civilian, 
                 a civic engagement platform. This letter was drafted with AI assistance based on 
                 resident concerns and relevant city codes.
               </p>

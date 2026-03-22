@@ -154,9 +154,10 @@ export default function MapPage() {
         bottom: 48px;
         left: 50%;
         transform: translateX(-50%);
-        background: white;
+        background: hsl(216,28%,10%);
         border-radius: 10px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        border: 1px solid hsl(215,20%,20%);
         padding: 12px 14px;
         width: 220px;
         pointer-events: none;
@@ -167,15 +168,15 @@ export default function MapPage() {
       `;
       tooltip.innerHTML = `
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:${color};letter-spacing:0.5px;margin-bottom:5px">${label}</div>
-        <p style="font-size:12px;font-weight:500;margin:0 0 5px;line-height:1.4;color:#1a1a1a">
+        <p style="font-size:12px;font-weight:500;margin:0 0 5px;line-height:1.4;color:hsl(210,30%,92%)">
           ${post.complaint.length > 80 ? post.complaint.slice(0, 80) + "..." : post.complaint}
         </p>
-        <p style="font-size:11px;color:#888;margin:0 0 8px">📍 ${post.location || "Tempe, AZ"}</p>
+        <p style="font-size:11px;color:hsl(215,14%,58%);margin:0 0 8px">📍 ${post.location || "Tempe, AZ"}</p>
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:12px;color:#2563eb;font-weight:600">👥 ${post.echo_count} voices</span>
-          <span style="font-size:11px;color:#888">Click to view →</span>
+          <span style="font-size:12px;color:hsl(221,83%,70%);font-weight:600">👥 ${post.echo_count} voices</span>
+          <span style="font-size:11px;color:hsl(215,14%,58%)">Click to view →</span>
         </div>
-        <div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:12px;height:12px;background:white;rotate:45deg;box-shadow:2px 2px 4px rgba(0,0,0,0.08)"></div>
+        <div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:12px;height:12px;background:hsl(216,28%,10%);rotate:45deg;box-shadow:2px 2px 4px rgba(0,0,0,0.3)"></div>
       `;
 
       const wrapper = document.createElement("div");
@@ -235,28 +236,32 @@ export default function MapPage() {
 
   return (
     <>
-      <nav className="nav">
-        <Link href="/" className="nav-logo">civic<span>pulse</span></Link>
-        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <Link href="/forum" className="landing-link">Forum</Link>
-          <Link href="/compose" className="nav-btn">+ Raise Issue</Link>
+      <nav className="civic-nav">
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Link href="/" className="civilian-logo"><span className="logo-white">Civil</span><span className="logo-blue">ian</span></Link>
+          <div style={{ display: "flex", gap: 4 }}>
+            {[{href:"/", label:"Feed"},{href:"/reels", label:"Reels"},{href:"/groups", label:"Groups"},{href:"/profile", label:"Profile"}].map(l => (
+              <Link key={l.href} href={l.href} style={{ color: "hsl(215,14%,58%)", textDecoration: "none", fontSize: 14, fontWeight: 500, padding: "6px 12px", borderRadius: 8 }}>{l.label}</Link>
+            ))}
+          </div>
+          <Link href="/compose" className="civic-btn-primary" style={{ padding: "10px 20px", fontSize: 14 }}>Report Issue</Link>
         </div>
       </nav>
 
       <div style={{
-        background: "white", borderBottom: "1px solid #e8e6e0",
+        background: "hsl(216,28%,10%)", borderBottom: "1px solid hsl(215,20%,20%)",
         padding: "8px 24px", display: "flex", alignItems: "center",
-        gap: 20, fontSize: 13, color: "#444",
+        gap: 20, fontSize: 13, color: "hsl(215,14%,58%)",
       }}>
-        <span>🗺️ <strong>{posts.length}</strong> issues</span>
-        <span>👥 <strong>{totalVoices}</strong> voices</span>
+        <span style={{ color: "hsl(210,30%,92%)" }}>🗺️ <strong>{posts.length}</strong> issues</span>
+        <span style={{ color: "hsl(210,30%,92%)" }}>👥 <strong>{totalVoices}</strong> voices</span>
         <div style={{ display: "flex", gap: 6, marginLeft: "auto" }}>
           {MAP_STYLES.map((s) => (
             <button key={s.id} onClick={() => switchStyle(s)} style={{
               padding: "5px 12px", borderRadius: 20, border: "1.5px solid",
-              borderColor: activeStyle === s.id ? "#2563eb" : "#e8e6e0",
-              background: activeStyle === s.id ? "#eff6ff" : "white",
-              color: activeStyle === s.id ? "#2563eb" : "#444",
+              borderColor: activeStyle === s.id ? "hsl(221,83%,53%)" : "hsl(215,20%,20%)",
+              background: activeStyle === s.id ? "rgba(37,99,235,0.15)" : "transparent",
+              color: activeStyle === s.id ? "hsl(221,83%,70%)" : "hsl(215,14%,58%)",
               fontSize: 12, fontWeight: activeStyle === s.id ? 600 : 400,
               cursor: "pointer", fontFamily: "Inter, sans-serif", transition: "all 0.15s",
             }}>{s.label}</button>
@@ -264,7 +269,7 @@ export default function MapPage() {
         </div>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
           {Object.entries(TYPE_COLORS).slice(0, 5).map(([type, color]) => (
-            <span key={type} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11 }}>
+            <span key={type} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "hsl(215,14%,58%)" }}>
               <span style={{ width: 8, height: 8, borderRadius: "50%", background: color, display: "inline-block" }} />
               {TYPE_LABELS[type]}
             </span>
@@ -273,9 +278,10 @@ export default function MapPage() {
       </div>
 
       {loading ? (
-        <div className="loading-wrap">
-          <div className="loading-spinner" />
-          <p className="loading-text">Loading map...</p>
+        <div style={{ textAlign: "center", padding: "80px 24px", background: "hsl(216,28%,7%)", minHeight: "calc(100vh - 112px)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: 32, height: 32, border: "3px solid hsl(215,20%,20%)", borderTopColor: "hsl(221,83%,53%)", borderRadius: "50%", animation: "spin 0.8s linear infinite", marginBottom: 16 }} />
+          <p style={{ color: "hsl(215,14%,58%)", fontSize: 14 }}>Loading map...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       ) : (
         <div ref={mapRef} style={{ height: "calc(100vh - 112px)", width: "100%" }} />

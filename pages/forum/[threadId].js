@@ -28,21 +28,29 @@ export default function ThreadDetailPage() {
     [threadId]
   );
 
+  const CivicNav = () => (
+    <nav className="civic-nav">
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Link href="/" className="civilian-logo"><span className="logo-white">Civil</span><span className="logo-blue">ian</span></Link>
+        <div style={{ display: "flex", gap: 4 }}>
+          {[{href:"/", label:"Feed"},{href:"/reels", label:"Reels"},{href:"/groups", label:"Groups"},{href:"/profile", label:"Profile"}].map(l => (
+            <Link key={l.href} href={l.href} style={{ color: "hsl(215,14%,58%)", textDecoration: "none", fontSize: 14, fontWeight: 500, padding: "6px 12px", borderRadius: 8 }}>{l.label}</Link>
+          ))}
+        </div>
+        <Link href="/compose" className="civic-btn-primary" style={{ padding: "10px 20px", fontSize: 14 }}>Report Issue</Link>
+      </div>
+    </nav>
+  );
+
   if (!thread) {
     return (
-      <>
-        <nav className="nav">
-          <Link href="/" className="nav-logo">civic<span>pulse</span></Link>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <Link href="/forum" className="landing-link">Forum</Link>
-            <Link href="/map" className="landing-link">Map</Link>
-          </div>
-        </nav>
-        <div className="container">
-          <p className="empty-title">Thread not found</p>
-          <Link href="/forum" className="back-link">← Back to forum</Link>
+      <div style={{ minHeight: "100vh", background: "hsl(216,28%,7%)" }}>
+        <CivicNav />
+        <div style={{ maxWidth: 680, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
+          <p style={{ color: "hsl(215,14%,58%)", marginBottom: 16 }}>Thread not found.</p>
+          <Link href="/forum" style={{ color: "hsl(221,83%,53%)", textDecoration: "none" }}>← Back to forum</Link>
         </div>
-      </>
+      </div>
     );
   }
 
@@ -144,120 +152,108 @@ export default function ThreadDetailPage() {
   }
 
   return (
-    <>
-      <nav className="nav">
-        <Link href="/" className="nav-logo">civic<span>pulse</span></Link>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          <Link href="/forum" className="landing-link">Forum</Link>
-          <Link href="/map" className="landing-link">Map</Link>
-          <Link href="/compose" className="nav-btn">+ Raise Issue</Link>
-        </div>
-      </nav>
+    <div style={{ minHeight: "100vh", background: "hsl(216,28%,7%)" }}>
+      <CivicNav />
+      <div style={{ maxWidth: 860, margin: "0 auto", padding: "32px 24px" }}>
+        <Link href="/forum" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: "hsl(215,14%,58%)", textDecoration: "none", marginBottom: 20 }}>← Back to forum</Link>
 
-      <div className="container">
-        <Link href="/forum" className="back-link">← Back to forum</Link>
-
-        <section className="thread-detail-card">
-          <div className="forum-thread-top">
+        <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div>
-              <p className="forum-thread-author">{thread.name}</p>
-              <p className="forum-thread-role">{thread.role}</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: "hsl(210,30%,92%)" }}>{thread.name}</p>
+              <p style={{ fontSize: 12, color: "hsl(215,14%,58%)" }}>{thread.role}</p>
             </div>
-            <span className="forum-thread-badge">{thread.badge}</span>
+            <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, background: "rgba(37,99,235,0.15)", color: "hsl(221,83%,70%)", fontWeight: 600 }}>{thread.badge}</span>
           </div>
 
-          <span className={`post-type ${typeInfo.cls}`}>{typeInfo.label}</span>
-          <h1 className="thread-detail-title">{thread.issueTitle}</h1>
-          <p className="thread-detail-body">{thread.text}</p>
+          <span className={`civic-pill civic-pill-${thread.issueType === "traffic_safety" ? "traffic" : thread.issueType === "street_lighting" ? "lighting" : thread.issueType === "road_maintenance" ? "roads" : thread.issueType === "parks_facilities" ? "parks" : "other"}`} style={{ marginBottom: 12, display: "inline-block" }}>{thread.issueType?.replace(/_/g, " ")}</span>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: "hsl(210,30%,92%)", marginBottom: 12, lineHeight: 1.3 }}>{thread.issueTitle}</h1>
+          <p style={{ fontSize: 15, color: "hsl(210,30%,92%)", lineHeight: 1.6, marginBottom: 12 }}>{thread.text}</p>
 
-          <div className="thread-detail-meta">
-            <span className="post-location">📍 {thread.location}</span>
-            <span className="post-echo">👥 {supportCount} supporters</span>
+          <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 8 }}>
+            <span style={{ fontSize: 13, color: "hsl(215,14%,58%)" }}>📍 {thread.location}</span>
+            <span style={{ fontSize: 13, color: "hsl(215,14%,58%)" }}>👥 {supportCount} supporters</span>
           </div>
-          <p className="forum-thread-status">{thread.status}</p>
-        </section>
+          <p style={{ fontSize: 13, color: "hsl(221,83%,70%)", fontStyle: "italic" }}>{thread.status}</p>
+        </div>
 
-        <section className="thread-detail-card">
-          <p className="result-label">Why this matters</p>
-          <p className="thread-detail-body">{thread.whyItMatters}</p>
+        <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "hsl(215,14%,58%)", marginBottom: 8 }}>Why this matters</p>
+          <p style={{ fontSize: 14, color: "hsl(210,30%,92%)", lineHeight: 1.6, marginBottom: 16 }}>{thread.whyItMatters}</p>
 
-          <p className="result-label" style={{ marginTop: 18 }}>How to participate</p>
-          <div className="thread-step-list">
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "hsl(215,14%,58%)", marginBottom: 8 }}>How to participate</p>
+          <div style={{ marginBottom: 16 }}>
             {thread.howToParticipate.map((step) => (
-              <div key={step} className="thread-step">
-                <span>•</span>
-                <p>{step}</p>
+              <div key={step} style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                <span style={{ color: "hsl(221,83%,53%)", flexShrink: 0 }}>•</span>
+                <p style={{ fontSize: 14, color: "hsl(210,30%,92%)", lineHeight: 1.5 }}>{step}</p>
               </div>
             ))}
           </div>
 
-          <p className="result-label" style={{ marginTop: 18 }}>Government pathway</p>
-          <p className="thread-detail-body">{thread.governmentPath}</p>
+          <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "hsl(215,14%,58%)", marginBottom: 8 }}>Government pathway</p>
+          <p style={{ fontSize: 14, color: "hsl(215,14%,58%)", lineHeight: 1.6, marginBottom: 20 }}>{thread.governmentPath}</p>
 
-          <div className="thread-action-row">
-            <button className="echo-btn" onClick={() => setSupported((s) => !s)}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={() => setSupported((s) => !s)}
+              style={{ flex: 1, minWidth: 160, padding: "10px 16px", borderRadius: 8, border: "none", cursor: "pointer", fontFamily: "Inter, sans-serif", fontSize: 13, fontWeight: 600, background: supported ? "rgba(34,197,94,0.15)" : "linear-gradient(135deg, hsl(221,83%,53%), hsl(263,70%,50%))", color: supported ? "#22c55e" : "white", transition: "all 0.2s" }}>
               {supported ? "✓ You support this issue" : "👥 Support this issue"}
             </button>
-            <button className="share-btn" onClick={() => setJoined((j) => !j)}>
+            <button onClick={() => setJoined((j) => !j)}
+              style={{ flex: 1, minWidth: 160, padding: "10px 16px", borderRadius: 8, border: "1px solid hsl(215,20%,20%)", cursor: "pointer", fontFamily: "Inter, sans-serif", fontSize: 13, fontWeight: 600, background: "hsl(216,28%,10%)", color: joined ? "#22c55e" : "hsl(210,30%,92%)", transition: "all 0.2s" }}>
               {joined ? "✓ Joined volunteer updates" : "📬 Join volunteer updates"}
             </button>
-            <button className="share-btn" onClick={() => setJoinedChat((c) => !c)}>
+            <button onClick={() => setJoinedChat((c) => !c)}
+              style={{ flex: 1, minWidth: 160, padding: "10px 16px", borderRadius: 8, border: "1px solid hsl(215,20%,20%)", cursor: "pointer", fontFamily: "Inter, sans-serif", fontSize: 13, fontWeight: 600, background: "hsl(216,28%,10%)", color: joinedChat ? "#22c55e" : "hsl(210,30%,92%)", transition: "all 0.2s" }}>
               {joinedChat ? "✓ Joined community chat" : "💬 Join community chat group"}
             </button>
           </div>
-        </section>
+        </div>
 
-        <section className="thread-detail-card">
-          <div className="discussion-header">
+        <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
             <div>
-              <p className="result-label">Community discussion</p>
-              <p className="thread-detail-body">
-                Residents are coordinating evidence, planning attendance, and discussing petition progress.
-              </p>
+              <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "hsl(215,14%,58%)", marginBottom: 4 }}>Community discussion</p>
+              <p style={{ fontSize: 13, color: "hsl(215,14%,58%)" }}>Residents coordinating evidence and planning attendance.</p>
             </div>
-            <span className="forum-thread-badge">{joinedChat ? "Joined chat" : "Public group"}</span>
+            <span style={{ fontSize: 11, padding: "3px 10px", borderRadius: 999, background: "rgba(37,99,235,0.15)", color: "hsl(221,83%,70%)", fontWeight: 600 }}>{joinedChat ? "Joined chat" : "Public group"}</span>
           </div>
 
           {threadDiscussions.map((message) => {
             const isLiked = Boolean(likedMessages[message.id]);
             const showComments = Boolean(openComments[message.id]);
             return (
-              <article key={message.id} className="discussion-card">
-                <div className="discussion-top">
+              <div key={message.id} style={{ background: "hsl(216,28%,8%)", borderRadius: 8, padding: "14px 16px", marginBottom: 10, border: "1px solid hsl(215,20%,20%)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
                   <div>
-                    <p className="forum-thread-author">{message.name}</p>
-                    <p className="forum-thread-role">{message.role}</p>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: "hsl(210,30%,92%)" }}>{message.name}</span>
+                    <span style={{ fontSize: 12, color: "hsl(215,14%,58%)", marginLeft: 8 }}>{message.role}</span>
                   </div>
-                  <span className="post-location">{message.time}</span>
+                  <span style={{ fontSize: 12, color: "hsl(215,14%,58%)" }}>{message.time}</span>
                 </div>
-                <p className="discussion-message">{message.message}</p>
-                <div className="discussion-actions">
-                  <button
-                    className={`discussion-action ${isLiked ? "active" : ""}`}
-                    onClick={() => toggleMessageLike(message.id)}
-                  >
+                <p style={{ fontSize: 14, color: "hsl(210,30%,92%)", lineHeight: 1.5, marginBottom: 10 }}>{message.message}</p>
+                <div style={{ display: "flex", gap: 12 }}>
+                  <button onClick={() => toggleMessageLike(message.id)}
+                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: isLiked ? "#22c55e" : "hsl(215,14%,58%)", fontFamily: "Inter, sans-serif", fontWeight: isLiked ? 600 : 400 }}>
                     👍 {isLiked ? message.likes + 1 : message.likes}
                   </button>
-                  <button
-                    className={`discussion-action ${showComments ? "active" : ""}`}
-                    onClick={() => toggleComments(message.id)}
-                  >
+                  <button onClick={() => toggleComments(message.id)}
+                    style={{ background: "none", border: "none", cursor: "pointer", fontSize: 13, color: showComments ? "hsl(221,83%,53%)" : "hsl(215,14%,58%)", fontFamily: "Inter, sans-serif" }}>
                     💬 {message.comments.length} comments
                   </button>
                 </div>
-
                 {showComments && (
-                  <div className="discussion-comments">
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid hsl(215,20%,20%)" }}>
                     {message.comments.map((comment) => (
-                      <p key={comment}>• {comment}</p>
+                      <p key={comment} style={{ fontSize: 13, color: "hsl(215,14%,58%)", marginBottom: 6, paddingLeft: 12, borderLeft: "2px solid hsl(215,20%,20%)" }}>• {comment}</p>
                     ))}
                   </div>
                 )}
-              </article>
+              </div>
             );
           })}
-        </section>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

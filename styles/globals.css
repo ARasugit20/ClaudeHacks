@@ -1,3 +1,111 @@
+/* DARK THEME VARIABLES */
+:root {
+  --background: hsl(216, 28%, 7%);
+  --card: hsl(216, 28%, 10%);
+  --border: hsl(215, 20%, 20%);
+  --foreground: hsl(210, 30%, 92%);
+  --muted: hsl(215, 14%, 58%);
+  --primary: hsl(221, 83%, 53%);
+  --civic-green: hsl(142, 71%, 45%);
+}
+
+body {
+  background: var(--background) !important;
+  color: var(--foreground) !important;
+}
+
+.civic-nav {
+  background: rgba(13, 17, 23, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid hsl(215, 20%, 20%);
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.civic-nav-logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: hsl(210, 30%, 92%);
+  text-decoration: none;
+}
+
+.civic-nav-logo span { color: hsl(221, 83%, 53%); }
+
+.civilian-logo {
+  font-size: 20px;
+  font-weight: 800;
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+.civilian-logo .logo-white { color: hsl(210, 30%, 92%); }
+.civilian-logo .logo-blue  { color: hsl(221, 83%, 53%); }
+
+.civic-card {
+  background: hsl(216, 28%, 10%);
+  border: 1px solid hsl(215, 20%, 20%);
+  border-radius: 12px;
+  transition: all 150ms ease;
+}
+
+.civic-card:hover { border-color: hsl(215, 20%, 28%); }
+
+.civic-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.civic-pill-traffic { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.civic-pill-safety { background: rgba(239,68,68,0.15); color: #ef4444; }
+.civic-pill-parks { background: rgba(34,197,94,0.15); color: #22c55e; }
+.civic-pill-lighting { background: rgba(99,102,241,0.15); color: #818cf8; }
+.civic-pill-roads { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.civic-pill-noise { background: rgba(249,115,22,0.15); color: #f97316; }
+.civic-pill-other { background: rgba(148,163,184,0.15); color: #94a3b8; }
+
+.civic-progress-bar {
+  height: 8px;
+  background: hsl(215, 25%, 15%);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.civic-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, hsl(142,71%,45%), #16a34a);
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.civic-btn-primary {
+  background: linear-gradient(135deg, hsl(221,83%,53%), hsl(263,70%,50%));
+  color: white;
+  border: none;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+  font-family: 'Inter', sans-serif;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.civic-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(37,99,235,0.35);
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;

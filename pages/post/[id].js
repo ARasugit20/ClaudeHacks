@@ -3,15 +3,15 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import { insforge } from "../../lib/supabase";
 
-const TYPE_LABELS = {
-  traffic_safety: { label: "Traffic Safety", cls: "type-traffic" },
-  street_lighting: { label: "Street Lighting", cls: "type-lighting" },
-  road_maintenance: { label: "Road Maintenance", cls: "type-roads" },
-  parks_facilities: { label: "Parks", cls: "type-parks" },
-  noise_complaint: { label: "Noise", cls: "type-other" },
-  housing: { label: "Housing", cls: "type-safety" },
-  utilities: { label: "Utilities", cls: "type-other" },
-  other: { label: "Community", cls: "type-other" },
+const ISSUE_COLORS = {
+  traffic_safety: { label: "Traffic Safety", cls: "civic-pill-traffic", border: "#f59e0b" },
+  street_lighting: { label: "Street Lighting", cls: "civic-pill-lighting", border: "#818cf8" },
+  road_maintenance: { label: "Road Maintenance", cls: "civic-pill-roads", border: "#a78bfa" },
+  parks_facilities: { label: "Parks", cls: "civic-pill-parks", border: "#22c55e" },
+  noise_complaint: { label: "Noise", cls: "civic-pill-noise", border: "#f97316" },
+  housing: { label: "Housing", cls: "civic-pill-safety", border: "#ef4444" },
+  utilities: { label: "Utilities", cls: "civic-pill-other", border: "#94a3b8" },
+  other: { label: "Community", cls: "civic-pill-other", border: "#94a3b8" },
 };
 
 export default function PostPage() {
@@ -24,7 +24,7 @@ export default function PostPage() {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [sendError, setSendError] = useState("");
-  const [animatedProgress, setAnimatedProgress] = useState(0); // ← NEW
+  const [animatedProgress, setAnimatedProgress] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -39,7 +39,6 @@ export default function PostPage() {
       });
   }, [id]);
 
-  // ← NEW: animate progress bar after post loads
   useEffect(() => {
     if (!post) return;
     const target = Math.min((post.echo_count / 50) * 100, 100);
@@ -92,148 +91,144 @@ export default function PostPage() {
     }
   }
 
+  const CivicNav = () => (
+    <nav className="civic-nav">
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px", height: "100%", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Link href="/" className="civilian-logo"><span className="logo-white">Civil</span><span className="logo-blue">ian</span></Link>
+        <div style={{ display: "flex", gap: 4 }}>
+          {[{href:"/", label:"Feed"},{href:"/reels", label:"Reels"},{href:"/groups", label:"Groups"},{href:"/profile", label:"Profile"}].map(l => (
+            <Link key={l.href} href={l.href} style={{ color: "hsl(215,14%,58%)", textDecoration: "none", fontSize: 14, fontWeight: 500, padding: "6px 12px", borderRadius: 8 }}>{l.label}</Link>
+          ))}
+        </div>
+        <Link href="/compose" className="civic-btn-primary" style={{ padding: "10px 20px", fontSize: 14 }}>Report Issue</Link>
+      </div>
+    </nav>
+  );
+
   if (loading) {
     return (
-      <>
-        <nav className="nav">
-          <Link href="/" className="nav-logo">civic<span>pulse</span></Link>
-          <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-            <Link href="/forum" className="landing-link">Forum</Link>
-            <Link href="/map" className="landing-link">Map</Link>
-          </div>
-        </nav>
-        <div className="container">
-          <div className="loading-wrap">
-            <div className="loading-spinner" />
-          </div>
+      <div style={{ minHeight: "100vh", background: "hsl(216,28%,7%)" }}>
+        <CivicNav />
+        <div style={{ textAlign: "center", padding: "80px 24px" }}>
+          <div className="civic-spinner" style={{ margin: "0 auto 16px" }} />
+          <p style={{ color: "hsl(215,14%,58%)", fontSize: 14 }}>Loading post...</p>
         </div>
-      </>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } } .civic-spinner { width: 32px; height: 32px; border: 3px solid hsl(215,20%,20%); border-top-color: hsl(221,83%,53%); border-radius: 50%; animation: spin 0.8s linear infinite; }`}</style>
+      </div>
     );
   }
 
-  if (!post) return (
-    <>
-      <nav className="nav">
-        <Link href="/" className="nav-logo">civic<span>pulse</span></Link>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          <Link href="/forum" className="landing-link">Forum</Link>
-          <Link href="/map" className="landing-link">Map</Link>
+  if (!post) {
+    return (
+      <div style={{ minHeight: "100vh", background: "hsl(216,28%,7%)" }}>
+        <CivicNav />
+        <div style={{ maxWidth: 680, margin: "0 auto", padding: "48px 24px", textAlign: "center" }}>
+          <p style={{ color: "hsl(215,14%,58%)", marginBottom: 16 }}>Post not found.</p>
+          <Link href="/" style={{ color: "hsl(221,83%,53%)", textDecoration: "none" }}>← Back to feed</Link>
         </div>
-      </nav>
-      <div className="container">
-        <p>Post not found.</p>
-        <Link href="/forum">← Back to forum</Link>
       </div>
-    </>
-  );
+    );
+  }
 
-  const typeInfo = TYPE_LABELS[post.issue_type] || TYPE_LABELS.other;
+  const c = ISSUE_COLORS[post.issue_type] || ISSUE_COLORS.other;
+  const echoCount = post.echo_count || 0;
 
   return (
-    <>
-      <nav className="nav">
-        <Link href="/" className="nav-logo">civic<span>pulse</span></Link>
-        <div style={{ display: "flex", gap: 14, alignItems: "center" }}>
-          <Link href="/forum" className="landing-link">Forum</Link>
-          <Link href="/map" className="landing-link">Map</Link>
-        </div>
-      </nav>
-      <div className="container">
-        <Link href="/forum" className="back-link">← Back to forum</Link>
+    <div style={{ minHeight: "100vh", background: "hsl(216,28%,7%)" }}>
+      <CivicNav />
+      <div style={{ maxWidth: 680, margin: "0 auto", padding: "32px 24px" }}>
+        <Link href="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: "hsl(215,14%,58%)", textDecoration: "none", marginBottom: 20 }}>← Back to feed</Link>
 
-        <div className="result-section">
-          <span className={`post-type ${typeInfo.cls}`}>{typeInfo.label}</span>
-          <p style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.5, margin: "12px 0 8px" }}>
-            {post.complaint}
-          </p>
-          <p style={{ fontSize: 13, color: "#888" }}>📍 {post.location}</p>
+        {/* Issue header */}
+        <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12, borderLeft: `4px solid ${c.border}` }}>
+          <span className={`civic-pill ${c.cls}`} style={{ marginBottom: 12, display: "inline-block" }}>{c.label}</span>
+          <p style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.5, color: "hsl(210,30%,92%)", marginBottom: 8 }}>{post.complaint}</p>
+          <p style={{ fontSize: 13, color: "hsl(215,14%,58%)" }}>📍 {post.location || "Tempe, AZ"}</p>
         </div>
 
         {/* Collective Power */}
-        <div className="collective-bar">
-          <p className="collective-count">👥 {post.echo_count} residents</p>
-          <p className="collective-label">have raised this same issue</p>
+        <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12, background: "rgba(34,197,94,0.05)", borderColor: "rgba(34,197,94,0.2)" }}>
+          <p style={{ fontSize: 28, fontWeight: 800, color: "hsl(210,30%,92%)", marginBottom: 2 }}>👥 {echoCount} residents</p>
+          <p style={{ fontSize: 14, color: "hsl(215,14%,58%)", marginBottom: 12 }}>have raised this same issue</p>
 
-          {/* ← NEW: animated bar with milestone ticks */}
-          <div style={{ position: "relative", marginTop: 10 }}>
-            <div className="progress-bar">
-              <div className="progress-fill" style={{ width: `${animatedProgress}%`, transition: "width 1s ease" }} />
+          <div style={{ position: "relative", marginBottom: 8 }}>
+            <div className="civic-progress-bar">
+              <div className="civic-progress-fill" style={{ width: `${animatedProgress}%`, transition: "width 1s ease" }} />
             </div>
-            {/* Milestone tick marks */}
-            <div style={{ position: "relative", height: 16, marginTop: 4 }}>
+            {/* Milestone ticks */}
+            <div style={{ position: "relative", height: 20, marginTop: 4 }}>
               <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", textAlign: "center" }}>
-                <div style={{ width: 1, height: 6, background: post.echo_count >= 25 ? "#22c55e" : "#d1d5db", margin: "0 auto" }} />
-                <span style={{ fontSize: 10, color: post.echo_count >= 25 ? "#166534" : "#aaa" }}>25</span>
+                <div style={{ width: 1, height: 6, background: echoCount >= 25 ? "#22c55e" : "hsl(215,20%,20%)", margin: "0 auto" }} />
+                <span style={{ fontSize: 10, color: echoCount >= 25 ? "#22c55e" : "hsl(215,14%,58%)" }}>25</span>
               </div>
               <div style={{ position: "absolute", right: 0, textAlign: "center" }}>
-                <div style={{ width: 1, height: 6, background: post.echo_count >= 50 ? "#22c55e" : "#d1d5db", margin: "0 auto" }} />
-                <span style={{ fontSize: 10, color: post.echo_count >= 50 ? "#166534" : "#aaa" }}>50</span>
+                <div style={{ width: 1, height: 6, background: echoCount >= 50 ? "#22c55e" : "hsl(215,20%,20%)", margin: "0 auto" }} />
+                <span style={{ fontSize: 10, color: echoCount >= 50 ? "#22c55e" : "hsl(215,14%,58%)" }}>50</span>
               </div>
             </div>
           </div>
 
-          <p style={{ fontSize: 11, color: "#166534", marginTop: 4 }}>
-            {post.echo_count >= 50
-              ? "🔥 High priority — escalating to City Council"
-              : post.echo_count >= 25
-              ? `${50 - post.echo_count} more voices needed for City Council escalation`
-              : `${25 - post.echo_count} more voices needed for department escalation`}
+          <p style={{ fontSize: 13, color: echoCount >= 50 ? "#22c55e" : "hsl(215,14%,58%)", fontWeight: 500 }}>
+            {echoCount >= 50
+              ? "🔥 Escalating to City Council"
+              : echoCount >= 25
+              ? `${50 - echoCount} more voices for City Council escalation`
+              : `${25 - echoCount} more voices for department escalation`}
           </p>
         </div>
 
         {/* Echo button */}
-        <button className={`echo-btn ${echoed ? "echoed" : ""}`} onClick={handleEcho}>
+        <button onClick={handleEcho} disabled={echoed}
+          style={{ width: "100%", padding: "14px", borderRadius: 10, border: "none", cursor: echoed ? "default" : "pointer", fontFamily: "Inter, sans-serif", fontSize: 15, fontWeight: 600, marginBottom: 12, transition: "all 0.2s", background: echoed ? "rgba(34,197,94,0.15)" : "linear-gradient(135deg, hsl(221,83%,53%), hsl(263,70%,50%))", color: echoed ? "#22c55e" : "white", borderColor: echoed ? "rgba(34,197,94,0.3)" : "transparent" }}>
           {echoed ? "✓ Your voice has been added" : "👥 Add My Voice to This Issue"}
         </button>
 
         {/* Official */}
-        <div className="result-section">
-          <p className="result-label">📬 This letter goes to</p>
-          <div className="official-card">
-            <span className="official-icon">🏛️</span>
-            <div>
-              <p className="official-name">{post.official_name}</p>
-              <p className="official-dept">{post.department}</p>
-              <p className="official-email">{post.official_email}</p>
+        {post.official_name && (
+          <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "hsl(215,14%,58%)", marginBottom: 12 }}>📬 This letter goes to</p>
+            <div style={{ display: "flex", gap: 12, background: "hsl(216,28%,8%)", borderRadius: 8, padding: 14, border: "1px solid hsl(215,20%,20%)" }}>
+              <span style={{ fontSize: 24 }}>🏛️</span>
+              <div>
+                <p style={{ fontSize: 14, fontWeight: 600, color: "hsl(210,30%,92%)", marginBottom: 2 }}>{post.official_name}</p>
+                <p style={{ fontSize: 13, color: "hsl(221,83%,53%)", marginBottom: 2 }}>{post.department}</p>
+                <p style={{ fontSize: 12, color: "hsl(215,14%,58%)" }}>{post.official_email}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Letter */}
-        <div className="result-section">
-          <p className="result-label">📄 Formal letter (AI-generated)</p>
-          <p className="result-text">{post.formal_request}</p>
-        </div>
+        {post.formal_request && (
+          <div className="civic-card" style={{ padding: "20px 24px", marginBottom: 12 }}>
+            <p style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, color: "hsl(215,14%,58%)", marginBottom: 12 }}>📄 Formal letter (AI-generated)</p>
+            <p style={{ fontSize: 14, lineHeight: 1.7, color: "hsl(210,30%,92%)", whiteSpace: "pre-wrap" }}>{post.formal_request}</p>
+          </div>
+        )}
 
         {/* Actions */}
-        <button className="share-btn" onClick={copyLetter} style={{ marginBottom: 10 }}>
+        <button onClick={copyLetter}
+          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid hsl(215,20%,20%)", cursor: "pointer", fontFamily: "Inter, sans-serif", fontSize: 14, fontWeight: 600, marginBottom: 8, background: "hsl(216,28%,10%)", color: copied ? "#22c55e" : "hsl(210,30%,92%)", transition: "all 0.15s" }}>
           {copied ? "✓ Copied!" : "📋 Copy Letter to Send"}
         </button>
 
         {sendError && (
-          <div style={{ background: "#fee2e2", border: "1px solid #fca5a5", borderRadius: 8, padding: "10px 14px", marginBottom: 10, fontSize: 13, color: "#991b1b" }}>
+          <div style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 8, padding: "10px 14px", marginBottom: 8, fontSize: 13, color: "#ef4444" }}>
             {sendError}
           </div>
         )}
 
-        <button
-          className="share-btn"
-          onClick={handleSendEmail}
-          disabled={sending || sent}
-          style={{
-            marginBottom: 10,
-            background: sent ? "#dcfce7" : sending ? "#f8f7f4" : "white",
-            borderColor: sent ? "#86efac" : "#e8e6e0",
-            color: sent ? "#166534" : sending ? "#aaa" : "#444",
-          }}
-        >
+        <button onClick={handleSendEmail} disabled={sending || sent}
+          style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid hsl(215,20%,20%)", cursor: sent ? "default" : "pointer", fontFamily: "Inter, sans-serif", fontSize: 14, fontWeight: 600, marginBottom: 16, background: sent ? "rgba(34,197,94,0.1)" : "hsl(216,28%,10%)", color: sent ? "#22c55e" : sending ? "hsl(215,14%,58%)" : "hsl(210,30%,92%)", transition: "all 0.15s" }}>
           {sent ? "✓ Letter sent to official!" : sending ? "📤 Sending..." : "📧 Send Letter to Official"}
         </button>
 
-        <div className="notice" style={{ marginTop: 16 }}>
+        <div style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.2)", borderRadius: 8, padding: "12px 14px", fontSize: 13, color: "hsl(221,83%,70%)", lineHeight: 1.5 }}>
           ⚖️ This letter is AI-generated based on your description. Review before sending. This is not legal advice.
         </div>
       </div>
-    </>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } .civic-spinner { width: 32px; height: 32px; border: 3px solid hsl(215,20%,20%); border-top-color: hsl(221,83%,53%); border-radius: 50%; animation: spin 0.8s linear infinite; }`}</style>
+    </div>
   );
 }
