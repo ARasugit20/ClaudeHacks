@@ -5,7 +5,7 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
   const { complaint } = req.body;
-  if (!complaint?.trim() || complaint.trim().length < 10) {
+  if (!complaint?.trim() || complaint.trim().length < 3) {
     return res.status(200).json({ allowed: true, reason: "Too short to evaluate" });
   }
 
@@ -22,8 +22,9 @@ Analyze this text and respond with ONLY a JSON object: {"allowed": true/false, "
 Mark as NOT allowed (allowed: false) ONLY if the text:
 - Contains hate speech, slurs, or racial abuse
 - Contains personal threats or harassment toward specific people
-- Is completely unrelated to civic/community issues (spam, gibberish)
+- Is completely unrelated to civic/community issues (spam, gibberish, insults with no civic context)
 - Contains sexual content
+- Is pure name-calling or personal insults with no civic complaint (e.g. "fix this idiot", "you're all stupid")
 
 Mark as ALLOWED (allowed: true) even if:
 - The person is frustrated or uses mild profanity about the situation ("this road is absolute garbage")

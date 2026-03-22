@@ -358,8 +358,8 @@ export default function Compose() {
 
     // PART 1 — Client-side validation (instant, no API call)
     let hasError = false;
-    if (complaint.trim().length < 20) {
-      setComplaintError("Please describe your issue in more detail (at least 20 characters).");
+    if (complaint.trim().length < 5) {
+      setComplaintError("Please describe your issue (at least 5 characters).");
       hasError = true;
     }
     if (location.trim() === "") {
