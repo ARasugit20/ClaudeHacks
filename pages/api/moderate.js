@@ -15,22 +15,29 @@ export default async function handler(req, res) {
       max_tokens: 100,
       messages: [{
         role: "user",
-        content: `You are a content moderator for a civic complaints platform where residents report local issues like potholes, broken lights, unsafe roads, and neighborhood problems.
+        content: `You are a content moderator for a civic complaints platform. Residents report local problems like potholes, broken lights, unsafe roads, noise, housing issues, etc.
 
-Analyze this text and respond with ONLY a JSON object: {"allowed": true/false, "reason": "one sentence explanation"}
+Respond with ONLY a JSON object: {"allowed": true/false, "reason": "one sentence"}
 
-Mark as NOT allowed (allowed: false) ONLY if the text:
-- Contains hate speech, slurs, or racial abuse
-- Contains personal threats or harassment toward specific people
-- Is completely unrelated to civic/community issues (spam, gibberish, insults with no civic context)
-- Contains sexual content
-- Is pure name-calling or personal insults with no civic complaint (e.g. "fix this idiot", "you're all stupid")
+BLOCK (allowed: false) if the text:
+- Is ONLY insults/name-calling with NO specific civic problem mentioned. Examples that must be BLOCKED:
+  * "the authority are idiots" — no problem described, just insult
+  * "fix this idiot" — no civic issue
+  * "these people are morons and don't know anything" — pure insult
+  * "city officials are complete idiots" — insult only, no issue
+  * "everyone in government is stupid and useless" — no specific problem
+- Contains hate speech, slurs, or threats of violence
+- Is sexual content or spam
 
-Mark as ALLOWED (allowed: true) even if:
-- The person is frustrated or uses mild profanity about the situation ("this road is absolute garbage")
-- The writing is informal or in broken English
-- The complaint criticizes government officials or policies
-- The text is written in any language
+ALLOW (allowed: true) if the text:
+- Describes a SPECIFIC civic problem even if written angrily. Examples that must be ALLOWED:
+  * "the authority are idiots, they haven't fixed the pothole on Mill Ave for 3 months" — has specific issue
+  * "these morons let the streetlight stay broken for weeks" — has specific issue
+  * "the city council is corrupt and won't fix our broken water pipes" — has specific issue
+  * "this road is absolute garbage, full of potholes" — describes road problem
+  * Any complaint mentioning: roads, lights, parks, noise, water, housing, safety, permits, trash, etc.
+
+THE KEY RULE: Does the text mention a SPECIFIC civic problem (road, light, park, noise, water, housing, safety, etc.)? If YES → allow. If it's ONLY insults with zero mention of any actual problem → block.
 
 Text to analyze: "${complaint.slice(0, 500)}"`,
       }],
