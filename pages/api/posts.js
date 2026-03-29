@@ -119,14 +119,11 @@ export default async function handler(req, res) {
       if (error) throw new Error(error.message);
       return res.status(200).json(data);
     } catch (err) {
-      // DB unreachable — return a synthetic post so the compose flow completes
-      console.warn("DB unavailable for POST, returning synthetic post:", err.message);
-      const syntheticPost = {
-        ...newPost,
-        id: `local-${Date.now()}`,
-        created_at: new Date().toISOString(),
-      };
-      return res.status(200).json(syntheticPost);
+      console.error("DB save failed:", err.message);
+      return res.status(503).json({
+        error: "save_failed",
+        message: "Your complaint could not be saved right now. Please try again. Your text has not been lost.",
+      });
     }
   }
 

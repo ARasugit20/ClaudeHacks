@@ -13,68 +13,34 @@ export default async function handler(req, res) {
 
   const subject = `Community Concern: ${issue_type?.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())} — ${location || "Tempe, AZ"}`;
 
+  const toAddress = process.env.OVERRIDE_EMAIL_TO || official_email;
+  const fromAddress = process.env.CIVILIAN_FROM_EMAIL || "letters@civilian.app";
+  const bccAddress = process.env.CIVILIAN_BCC_EMAIL || "log@civilian.app";
+
   try {
     const { data, error } = await resend.emails.send({
-      from: "Civilian <onboarding@resend.dev>",
-      to: ["sgupt354@asu.edu"],
-      reply_to: "noreply@civilian.app",
+      from: `Civilian <${fromAddress}>`,
+      to: [toAddress],
+      bcc: [bccAddress],
+      reply_to: official_email,
       subject,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        </head>
-        <body style="margin:0;padding:0;background:#f8f7f4;font-family:Inter,Arial,sans-serif;">
-          <div style="max-width:600px;margin:32px auto;background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-            
-            <!-- Header -->
-            <div style="background:#2563eb;padding:24px 32px;">
-              <p style="margin:0;color:rgba(255,255,255,0.8);font-size:13px;letter-spacing:0.5px;text-transform:uppercase;">Civilian Community Platform</p>
-              <h1 style="margin:6px 0 0;color:white;font-size:22px;font-weight:600;">Formal Community Request</h1>
-            </div>
-
-            <!-- Notice bar -->
-            <div style="background:#eff6ff;border-bottom:1px solid #bfdbfe;padding:12px 32px;">
-              <p style="margin:0;font-size:13px;color:#1e40af;">
-                📍 <strong>${location || "Tempe, AZ"}</strong> &nbsp;·&nbsp; 
-                🏛️ <strong>${department}</strong> &nbsp;·&nbsp;
-                📋 <strong>${issue_type?.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase())}</strong>
-              </p>
-            </div>
-
-            <!-- Letter body -->
-            <div style="padding:32px;">
-              <p style="margin:0 0 24px;font-size:14px;color:#666;line-height:1.6;">
-                The following formal request was submitted by community members via Civilian, 
-                a civic engagement platform. This letter was drafted with AI assistance based on 
-                resident concerns and relevant city codes.
-              </p>
-              
-              <div style="background:#f8f7f4;border-left:4px solid #2563eb;border-radius:0 8px 8px 0;padding:24px;margin-bottom:24px;">
-                <p style="margin:0;font-size:15px;line-height:1.8;color:#1a1a1a;white-space:pre-wrap;">${formal_request}</p>
-              </div>
-
-              <div style="border-top:1px solid #e8e6e0;padding-top:20px;margin-top:8px;">
-                <p style="margin:0 0 4px;font-size:12px;color:#888;">This letter was sent via Civilian</p>
-                <p style="margin:0;font-size:12px;color:#888;">
-                  View community support for this issue: 
-                  <a href="https://civic-app-nine.vercel.app/post/${post_id}" style="color:#2563eb;">civic-app-nine.vercel.app/post/${post_id}</a>
-                </p>
-              </div>
-            </div>
-
-            <!-- Footer -->
-            <div style="background:#f8f7f4;padding:16px 32px;border-top:1px solid #e8e6e0;">
-              <p style="margin:0;font-size:11px;color:#aaa;text-align:center;">
-                Civilian · AI-powered civic engagement · This is an automated community request
-              </p>
-            </div>
-          </div>
-        </body>
-        </html>
-      `,
+      html: `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="font-family:Arial,sans-serif;font-size:14px;color:#000000;max-width:600px;line-height:1.6;padding:32px;">
+<p style="margin:0 0 16px 0;">From: Civilian Community Platform</p>
+<p style="margin:0 0 16px 0;">The following formal complaint was submitted by community members via Civilian, a civic engagement platform.</p>
+<p style="margin:0 0 4px 0;">Location: ${location || "Tempe, AZ"}</p>
+<p style="margin:0 0 4px 0;">Department: ${department || "City Services"}</p>
+<p style="margin:0 0 16px 0;">Issue: ${issue_type?.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) || "Community Issue"}</p>
+<hr>
+<p style="margin:16px 0;white-space:pre-wrap;">${formal_request}</p>
+<hr>
+<p style="margin:16px 0 0 0;">This letter was drafted with AI assistance based on information provided by residents. Civilian is a civic engagement platform that helps communities formally report local issues.</p>
+</div>
+</body>
+</html>`,
       text: formal_request, // plain text fallback
     });
 

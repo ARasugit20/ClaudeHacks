@@ -19,15 +19,18 @@ export default async function handler(req, res) {
     const { post_id, text, author_name } = req.body;
     if (!post_id || !text) return res.status(400).json({ error: "post_id and text are required" });
 
+    const safeText = String(text || "").slice(0, 1000).trim();
+    const safeName = String(author_name || "Anonymous").slice(0, 100).trim();
+
     const { data, error } = await insforge.database
       .from("comments")
-      .insert([{ post_id, text, author_name: author_name || "Anonymous" }])
+      .insert([{ post_id, text: safeText, author_name: safeName }])
       .select()
       .single();
 
     if (error) {
       // Return optimistic response so UI still works
-      return res.status(200).json({ id: `local-${Date.now()}`, post_id, text, author_name: author_name || "Anonymous", created_at: new Date().toISOString() });
+      return res.status(200).json({ id: `local-${Date.now()}`, post_id, text: safeText, author_name: safeName, created_at: new Date().toISOString() });
     }
     return res.status(200).json(data);
   }

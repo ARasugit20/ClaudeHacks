@@ -7,8 +7,8 @@ export default async function handler(req, res) {
     const { Resend } = await import("resend");
     const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
-      from: "Civilian Contact <onboarding@resend.dev>",
-      to: "sgupt354@asu.edu",
+      from: `Civilian Contact <${process.env.CIVILIAN_FROM_EMAIL || "letters@civilian.app"}>`,
+      to: process.env.CIVILIAN_CONTACT_EMAIL || "hello@civilian.app",
       subject: `[Civilian] ${category} from ${name || "Anonymous"}`,
       text: `Category: ${category}\nName: ${name || "Anonymous"}\nEmail: ${email || "Not provided"}\n\n${message}`,
     });

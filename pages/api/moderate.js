@@ -5,7 +5,8 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
   const { complaint } = req.body;
-  if (!complaint?.trim() || complaint.trim().length < 3) {
+  const sanitizedComplaint = String(complaint || "").slice(0, 500).trim();
+  if (!sanitizedComplaint || sanitizedComplaint.length < 3) {
     return res.status(200).json({ allowed: true, reason: "Too short to evaluate" });
   }
 
@@ -23,7 +24,7 @@ Respond with ONLY: {"allowed": true/false, "reason": "one sentence"}
 
 Use your judgment. A good civic complaint is respectful and describes a real problem. Messages that are disrespectful, insulting, abusive, threatening, or have no legitimate civic purpose should not be sent to officials.
 
-Message: "${complaint.slice(0, 500)}"`,
+Message: "${sanitizedComplaint}"`,
       }],
     });
 

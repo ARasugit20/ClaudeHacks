@@ -404,6 +404,25 @@ export default function Compose() {
         throw new Error(errData.message || "Analysis failed");
       }
       const analyzed = await analyzeRes.json();
+
+      // Handle structured rejection from classifier
+      if (analyzed.rejected) {
+        setLoading(false);
+        setStep("form");
+        const messages = {
+          no_location: "Please include a specific location — a street address, intersection, or landmark.",
+          targets_individual: "Complaints cannot target named individuals. Describe the physical problem instead.",
+          political_opinion: "Please describe a specific physical issue rather than a political opinion.",
+          policy_suggestion: "Describe a specific broken or unsafe condition rather than a general policy suggestion.",
+          abusive_content: "Please rewrite your complaint without abusive language.",
+          outside_jurisdiction: "This may be outside local government jurisdiction. Describe the specific service failure if there is one.",
+          not_specific_enough: "Please be more specific about what the problem is and exactly where it is.",
+        };
+        const message = messages[analyzed.reason] || "Please rewrite your complaint.";
+        const suggestion = analyzed.reframe_suggestion ? " " + analyzed.reframe_suggestion : "";
+        setModerationError(message + suggestion);
+        return;
+      }
       const saveRes = await fetch("/api/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -418,7 +437,10 @@ export default function Compose() {
           urgency_score: analyzed.urgency_score || null,
         }),
       });
-      if (!saveRes.ok) throw new Error("Save failed");
+      if (!saveRes.ok) {
+        const saveErr = await saveRes.json().catch(() => ({}));
+        throw new Error(saveErr.message || "Your complaint could not be saved right now. Please try again. Your text has not been lost.");
+      }
       const saved = await saveRes.json();
       setResult({ ...analyzed, id: saved.id });
       setStep("done");

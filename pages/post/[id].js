@@ -279,7 +279,7 @@ export default function PostPage() {
       if (!res.ok) throw new Error(data.error || "Send failed");
       setSent(true);
       setToast({ message: `Letter sent to ${post.official_name}!`, type: "success" });
-      fetch("/api/tinyfish-followup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ post_id: post.id }) }).catch(() => {});
+      // TinyFish follow-up is scheduled server-side after 7 days — do NOT trigger here
     } catch (err) { setSendError(err.message); }
     finally { setSending(false); }
   }

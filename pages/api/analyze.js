@@ -19,39 +19,43 @@ function moderateContent(text) {
   return true;
 }
 
-const SYSTEM_PROMPT = `You are a civic action assistant. A community member has described a problem in their neighborhood.
-If an image is provided, describe what you see in detail and reference it in the formal letter with: The attached photograph shows...
+const SYSTEM_PROMPT = `You are a civic complaint classifier and letter writer for Civilian, a local government engagement platform.
 
-IMPORTANT: If the complaint contains violent, hateful, abusive, or discriminatory language, respond with ONLY: {"error": "content_policy", "message": "Content violates community guidelines."}
+STEP 1 — VALIDATE THE COMPLAINT
+REJECT (rejected: true) if the complaint:
+- Does not describe a specific, observable, physical local issue
+- Does not include or imply a specific location
+- Targets a named individual by name as the subject
+- Expresses a political opinion rather than describing a problem
+- Is a policy suggestion not a specific reportable issue
+- Contains abusive, threatening, or discriminatory language
+- Is outside local government jurisdiction
 
-You must do exactly 2 web searches maximum, then respond with ONLY a JSON object.
+ACCEPT (rejected: false) if the complaint describes a specific physical problem with a location that is within local government jurisdiction.
 
-Step 1: Search for the current government official responsible for this issue type in the given city.
-Step 2: Search for a relevant local law, ordinance, or statute number for this issue type.
-Step 3: Respond with ONLY this JSON — no other text before or after:
+IF REJECTED return ONLY this JSON:
+{"rejected": true, "reason": "<exactly one of: no_location | targets_individual | political_opinion | policy_suggestion | abusive_content | outside_jurisdiction | not_specific_enough>", "reframe_suggestion": "<one specific sentence telling the user how to rewrite their complaint>"}
 
-{
-  "issue_type": "one of: traffic_safety, street_lighting, road_maintenance, parks_facilities, noise_complaint, housing, utilities, other",
-  "department": "exact real department name found via search",
-  "official_name": "real current name and title found via search",
-  "official_email": "real email address found via search",
-  "location_extracted": "location mentioned in complaint",
-  "urgency_score": "integer 1-10. Set 8-10 for safety issues (traffic, lighting, structural hazards). Set 6-7 for quality-of-life issues. Set 1-5 for minor inconveniences.",
-  "language": "ISO 639-1 code of the language the user wrote their complaint in. Detect from the text itself.",
-  "official_language": "ISO 639-1 code of the OFFICIAL government language for the specific location provided. Use location to determine this — not the complaint language. Examples: location in Portugal = 'pt', France = 'fr', Arizona USA = 'en', Tamil Nadu India = 'ta', Catalonia Spain = 'ca', Quebec Canada = 'fr'",
-  "formal_request": "Write the full formal letter in the SAME LANGUAGE the user wrote their complaint in. If they wrote in English, write in English. If they wrote in French, write in French. Do NOT write in the official_language — that is handled separately by a translation step. The user needs to read and edit this letter before it gets translated. 3-4 paragraphs, citing the real law or ordinance you found, written from the perspective of concerned residents. Sign as Concerned Residents."
-}
+IF ACCEPTED do two web searches:
+1. Current official responsible for this issue type in this city and their verified email
+2. Relevant local ordinance or statute number
 
-CRITICAL: Your final response must be ONLY the JSON object. No markdown, no explanation, no text before or after the JSON.`;
+Then return ONLY this JSON:
+{"rejected": false, "issue_type": "<traffic_safety|street_lighting|road_maintenance|parks_facilities|noise_complaint|housing|utilities|sanitation|other>", "severity": "<critical|urgent|standard|suggestion>", "department": "<real department name from search>", "official_name": "<real name and title from search>", "official_email": "<real email from search, or empty string if not found>", "location_extracted": "<location from complaint>", "urgency_score": <1-10>, "language": "<ISO 639-1 code of language user wrote in>", "formal_request": "<complete formal letter in same language user wrote in, 3-4 paragraphs, citing real ordinance found, signed as Concerned Residents>"}
+
+CRITICAL: Response must be ONLY valid JSON. No markdown, no backticks, no text before or after. If official email not found, use empty string.`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { complaint, location, imageBase64, imageMediaType, language, highSensitivity } = req.body;
-  if (!complaint?.trim()) return res.status(400).json({ error: "No complaint" });
+
+  const sanitizedComplaint = String(complaint || "").slice(0, 2000).trim();
+  const sanitizedLocation = String(location || "").slice(0, 200).trim();
+  if (!sanitizedComplaint) return res.status(400).json({ error: "Complaint text is required" });
 
   // Content policy check
-  if (!moderateContent(complaint)) {
+  if (!moderateContent(sanitizedComplaint)) {
     return res.status(400).json({
       error: "content_policy",
       message: "Your post contains content that violates our community guidelines. Civilian does not allow violent, hateful, or abusive language. Please describe your civic issue respectfully.",
@@ -72,7 +76,7 @@ export default async function handler(req, res) {
     }
     userContent.push({
       type: "text",
-      text: `Community complaint: ${complaint}\n\nLocation: ${location || "Tempe, Arizona"}\nComplaint language: ${language || "en"}\n\nDo exactly 2 web searches, then respond with ONLY the JSON object described in your instructions.`,
+      text: `Community complaint: ${sanitizedComplaint}\n\nLocation: ${sanitizedLocation || "Tempe, Arizona"}\nComplaint language: ${language || "en"}\n\nDo exactly 2 web searches, then respond with ONLY the JSON object described in your instructions.`,
     });
 
     const message = await client.messages.create({

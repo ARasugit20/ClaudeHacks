@@ -2,7 +2,8 @@ export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
 
   const { text, targetLanguage, targetLanguageName } = req.body;
-  if (!text) return res.status(400).json({ error: "No text" });
+  const safeText = String(text || "").slice(0, 5000).trim();
+  if (!safeText) return res.status(400).json({ error: "No text" });
 
   try {
     const Anthropic = (await import("@anthropic-ai/sdk")).default;
@@ -13,7 +14,7 @@ export default async function handler(req, res) {
       max_tokens: 2000,
       messages: [{
         role: "user",
-        content: `Translate the following formal civic complaint letter to ${targetLanguageName || targetLanguage}. Keep the same formal tone and structure. Preserve all proper nouns (names, addresses, law citations). Return ONLY the translated text, nothing else.\n\nText to translate:\n${text}`,
+        content: `Translate the following formal civic complaint letter to ${targetLanguageName || targetLanguage}. Keep the same formal tone and structure. Preserve all proper nouns (names, addresses, law citations). Return ONLY the translated text, nothing else.\n\nText to translate:\n${safeText}`,
       }],
     });
 

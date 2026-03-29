@@ -74,12 +74,17 @@ export default async function handler(req, res) {
     // Send follow-up email via Resend
     if (followUpLetter && process.env.RESEND_API_KEY) {
       try {
+        const toAddress = process.env.OVERRIDE_EMAIL_TO || post.official_email;
+        const fromAddress = process.env.CIVILIAN_FROM_EMAIL || "letters@civilian.app";
+        const bccAddress = process.env.CIVILIAN_BCC_EMAIL || "log@civilian.app";
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${process.env.RESEND_API_KEY}` },
           body: JSON.stringify({
-            from: "Civilian <onboarding@resend.dev>",
-            to: ["sgupt354@asu.edu"],
+            from: `Civilian <${fromAddress}>`,
+            to: [toAddress],
+            bcc: [bccAddress],
+            reply_to: post.official_email,
             subject: `[FOLLOW-UP] Civic Issue: ${post.issue_type} at ${post.location}`,
             text: `AUTOMATED FOLLOW-UP (sent by Civilian AI Agent)\n\nOriginal recipient: ${post.official_email}\n\n${followUpLetter}`,
           }),
