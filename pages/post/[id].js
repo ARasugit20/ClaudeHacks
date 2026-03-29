@@ -273,7 +273,7 @@ export default function PostPage() {
     try {
       const res = await fetch("/api/send-email", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ official_email: post.official_email, official_name: post.official_name, department: post.department, issue_type: post.issue_type, formal_request: post.formal_request, location: post.location, post_id: post.id }),
+        body: JSON.stringify({ official_email: post.official_email, official_email_fallback: post.official_email_fallback, official_name: post.official_name, department: post.department, issue_type: post.issue_type, formal_request: post.formal_request, location: post.location, post_id: post.id }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Send failed");

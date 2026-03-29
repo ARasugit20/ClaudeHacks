@@ -432,6 +432,7 @@ export default function Compose() {
           department: analyzed.department,
           official_name: analyzed.official_name,
           official_email: analyzed.official_email,
+          official_email_fallback: analyzed.official_email_fallback || "",
           issue_type: analyzed.issue_type,
           location: analyzed.location_extracted || location,
           urgency_score: analyzed.urgency_score || null,

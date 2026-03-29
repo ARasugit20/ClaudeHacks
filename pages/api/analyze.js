@@ -36,14 +36,20 @@ ACCEPT (rejected: false) if the complaint describes a specific physical problem 
 IF REJECTED return ONLY this JSON:
 {"rejected": true, "reason": "<exactly one of: no_location | targets_individual | political_opinion | policy_suggestion | abusive_content | outside_jurisdiction | not_specific_enough>", "reframe_suggestion": "<one specific sentence telling the user how to rewrite their complaint>"}
 
-IF ACCEPTED do two web searches:
-1. Current official responsible for this issue type in this city and their verified email
-2. Relevant local ordinance or statute number
+IF ACCEPTED do three web searches:
+1. Current official responsible for this issue type in this city and their verified direct email
+2. General department inbox email for this issue type in this city (e.g. StreetLightRequest@tempe.gov, transportation@tempe.gov, publicworks@tempe.gov)
+3. Relevant local ordinance or statute number
 
 Then return ONLY this JSON:
-{"rejected": false, "issue_type": "<traffic_safety|street_lighting|road_maintenance|parks_facilities|noise_complaint|housing|utilities|sanitation|other>", "severity": "<critical|urgent|standard|suggestion>", "department": "<real department name from search>", "official_name": "<real name and title from search>", "official_email": "<real email from search, or empty string if not found>", "location_extracted": "<location from complaint>", "urgency_score": <1-10>, "language": "<ISO 639-1 code of language user wrote in>", "formal_request": "<complete formal letter in same language user wrote in, 3-4 paragraphs, citing real ordinance found, signed as Concerned Residents>"}
+{"rejected": false, "issue_type": "<traffic_safety|street_lighting|road_maintenance|parks_facilities|noise_complaint|housing|utilities|sanitation|other>", "severity": "<critical|urgent|standard|suggestion>", "department": "<real department name from search>", "official_name": "<real name and title from search>", "official_email": "<real direct email from search, or empty string if not found>", "official_email_fallback": "<general department inbox email as fallback, or empty string if not found>", "location_extracted": "<location from complaint>", "urgency_score": <1-10>, "language": "<ISO 639-1 code of language user wrote in>", "formal_request": "<complete formal letter in same language user wrote in, 3-4 paragraphs, citing real ordinance found, signed as Concerned Residents>"}
 
-CRITICAL: Response must be ONLY valid JSON. No markdown, no backticks, no text before or after. If official email not found, use empty string.`;
+LETTER WRITING RULES:
+- Only describe what the resident explicitly reported. Do not fabricate or assume specific incidents, injuries, near-misses, or consequences that were not mentioned in the original complaint.
+- Do not add dramatic language about foreseeable fatalities, injuries, or emergencies unless the resident specifically described them.
+- Write factually based only on what was submitted.
+
+CRITICAL: Response must be ONLY valid JSON. No markdown, no backticks, no text before or after. If any email not found, use empty string.`;
 
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
